@@ -8,6 +8,7 @@ interface Track {
   albumHint: string;
   year: string;
   color: string;
+  type?: 'track' | 'album';
 }
 
 const NIKI_TRACKS: Track[] = [
@@ -20,22 +21,42 @@ const NIKI_TRACKS: Track[] = [
     color: '#f9a8d4', // pink
   },
   {
-    id: '6gS46n812ZzY8f4sJ9M8Vv',
+    id: '0W5o1Kxw1VlohSajPqeBMF',
     title: 'Autumn',
     artist: 'NIKI',
-    albumHint: 'NICOLE',
+    albumHint: 'Nicole',
     year: '2022',
     color: '#fb923c', // autumn orange
   },
   {
-    id: '6Z5A1m1v5lXp6d3h83hHhW',
+    id: '21acb66djKRlDPJOXRBCkc',
     title: 'Take a Chance with Me',
     artist: 'NIKI',
-    albumHint: 'NICOLE',
+    albumHint: 'Nicole',
     year: '2022',
     color: '#a78bfa', // purple
   },
+  {
+    id: '4jKfiwrpklbqDOrwiUBsLv',
+    title: 'Autumn Reimagined',
+    artist: 'NIKI',
+    albumHint: 'Nicole (Reimagined)',
+    year: '2023',
+    color: '#f59e0b', // gold/amber
+    type: 'album',
+  },
+  {
+    id: '2c5JKO8gPaOFVxQ0elwXEG',
+    title: 'Lifetime Reimagined',
+    artist: 'NIKI',
+    albumHint: 'Lifetime (Reimagined) - Single',
+    year: '2023',
+    color: '#ec4899', // rose pink
+  },
 ];
+
+const TAB_EMOJIS = ['🌅', '🍂', '✨', '🎵', '🌟'];
+
 
 export const SpotifyPlayer: React.FC = () => {
   const [activeTrack, setActiveTrack] = useState(0);
@@ -71,7 +92,7 @@ export const SpotifyPlayer: React.FC = () => {
                 onClick={() => setActiveTrack(i)}
                 title={t.title}
               >
-                <span className="tab-icon-emoji">{i === 0 ? '🌅' : i === 1 ? '🍂' : '✨'}</span>{' '}
+                <span className="tab-icon-emoji">{TAB_EMOJIS[i] || '🎵'}</span>{' '}
                 <span className="spotify-tab-track-name">{t.title}</span>
               </button>
             ))}
@@ -95,7 +116,7 @@ export const SpotifyPlayer: React.FC = () => {
         <div className="spotify-embed-wrapper-inline">
           <iframe
             key={track.id}
-            src={`https://open.spotify.com/embed/track/${track.id}?utm_source=generator&theme=0`}
+            src={`https://open.spotify.com/embed/${track.type || 'track'}/${track.id}?utm_source=generator&theme=0`}
             width="100%"
             height="80"
             frameBorder="0"
