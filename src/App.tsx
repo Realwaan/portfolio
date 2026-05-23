@@ -8,6 +8,8 @@ import { DetailPanel } from './components/DetailPanel';
 import { ActionPanel } from './components/ActionPanel';
 import { Toast } from './components/Toast';
 import type { ToastItem } from './components/Toast';
+import { SpotifyPlayer } from './components/SpotifyPlayer';
+
 
 export default function App() {
   const [search, setSearch] = useState('');
@@ -324,107 +326,113 @@ export default function App() {
         </div>
       )}
 
-      {/* Main Raycast Window Box */}
-      <div className="raycast-window" onClick={(e) => e.stopPropagation()}>
-        
-        {/* Search header bar */}
-        <div className="search-bar-container">
-          <Search size={18} className="search-icon" />
-          <input
-            ref={searchInputRef}
-            type="text"
-            className="search-input"
-            placeholder="Search projects, academics, skills, or contact info..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            aria-label="Command search"
-          />
-          {error && (
-            <div className="active-accent-indicator" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.25)', color: '#ef4444' }}>
-              <ShieldAlert size={11} style={{ marginRight: 2 }} /> Fallback Mode
+      {/* Main Raycast Window Box & Spotify Bento Module */}
+      <div className="portfolio-wrapper" onClick={(e) => e.stopPropagation()}>
+        <div className="raycast-window">
+          
+          {/* Search header bar */}
+          <div className="search-bar-container">
+            <Search size={18} className="search-icon" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              className="search-input"
+              placeholder="Search projects, academics, skills, or contact info..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Command search"
+            />
+            {error && (
+              <div className="active-accent-indicator" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.25)', color: '#ef4444' }}>
+                <ShieldAlert size={11} style={{ marginRight: 2 }} /> Fallback Mode
+              </div>
+            )}
+            <div className="active-accent-indicator">
+              {accent === 'cit-gold' ? 'Wildcats' : 'Classic'}
             </div>
-          )}
-          <div className="active-accent-indicator">
-            {accent === 'cit-gold' ? 'Wildcats' : 'Classic'}
           </div>
-        </div>
 
-        {/* Dual pane list & details */}
-        <div className="palette-grid">
-          {filteredItems.length === 0 ? (
-            <div className="empty-state">
-              <Sparkles size={36} />
-              <div className="empty-state-title">No results found</div>
-              <p className="empty-state-desc">No extension modules match "{search}". Try searching for projects, skills, or CIT courses.</p>
-            </div>
-          ) : (
-            <>
-              {/* Left List */}
-              <CommandList
-                items={filteredItems}
-                selectedIndex={selectedIndex}
-                onItemClick={executeItemAction}
-                onHoverItem={(index) => setSelectedIndex(index)}
-              />
+          {/* Dual pane list & details */}
+          <div className="palette-grid">
+            {filteredItems.length === 0 ? (
+              <div className="empty-state">
+                <Sparkles size={36} />
+                <div className="empty-state-title">No results found</div>
+                <p className="empty-state-desc">No extension modules match "{search}". Try searching for projects, skills, or CIT courses.</p>
+              </div>
+            ) : (
+              <>
+                {/* Left List */}
+                <CommandList
+                  items={filteredItems}
+                  selectedIndex={selectedIndex}
+                  onItemClick={executeItemAction}
+                  onHoverItem={(index) => setSelectedIndex(index)}
+                />
 
-              {/* Right Detail Pane */}
-              <DetailPanel
-                selectedItem={selectedItem?.rawItem}
-                type={selectedItem?.category}
-                onSelectCourseCode={handleSelectCourseCode}
-              />
-            </>
-          )}
-        </div>
+                {/* Right Detail Pane */}
+                <DetailPanel
+                  selectedItem={selectedItem?.rawItem}
+                  type={selectedItem?.category}
+                  onSelectCourseCode={handleSelectCourseCode}
+                />
+              </>
+            )}
+          </div>
 
-        {/* Actions Footer Bar */}
-        <ActionPanel
-          onActionClick={() => setShowActionModal(true)}
-          accent={accent}
-        />
+          {/* Actions Footer Bar */}
+          <ActionPanel
+            onActionClick={() => setShowActionModal(true)}
+            accent={accent}
+          />
 
-        {/* Settings/Themes Action Dialog Popover */}
-        {showActionModal && (
-          <div className="action-modal-overlay" onClick={() => setShowActionModal(false)}>
-            <div className="action-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="action-modal-header">Switch Portfolio Accent Accent</div>
-              <div className="action-modal-list">
-                <div 
-                  className={`action-modal-item ${accent === 'raycast-red' ? 'active' : ''}`}
-                  onClick={() => handleAccentChange('raycast-red')}
-                >
-                  <div className="action-modal-item-left">
-                    <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', backgroundColor: '#ff3b30' }}></span>
-                    <span>Raycast Crimson Red</span>
+          {/* Settings/Themes Action Dialog Popover */}
+          {showActionModal && (
+            <div className="action-modal-overlay" onClick={() => setShowActionModal(false)}>
+              <div className="action-modal" onClick={(e) => e.stopPropagation()}>
+                <div className="action-modal-header">Switch Portfolio Accent Accent</div>
+                <div className="action-modal-list">
+                  <div 
+                    className={`action-modal-item ${accent === 'raycast-red' ? 'active' : ''}`}
+                    onClick={() => handleAccentChange('raycast-red')}
+                  >
+                    <div className="action-modal-item-left">
+                      <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', backgroundColor: '#ff3b30' }}></span>
+                      <span>Raycast Crimson Red</span>
+                    </div>
+                    {accent === 'raycast-red' && <Check size={14} style={{ color: 'var(--accent-color)' }} />}
                   </div>
-                  {accent === 'raycast-red' && <Check size={14} style={{ color: 'var(--accent-color)' }} />}
-                </div>
-                <div 
-                  className={`action-modal-item ${accent === 'cit-gold' ? 'active' : ''}`}
-                  onClick={() => handleAccentChange('cit-gold')}
-                >
-                  <div className="action-modal-item-left">
-                    <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', backgroundColor: '#ffc72c' }}></span>
-                    <span>CIT-U Gold Accent</span>
+                  <div 
+                    className={`action-modal-item ${accent === 'cit-gold' ? 'active' : ''}`}
+                    onClick={() => handleAccentChange('cit-gold')}
+                  >
+                    <div className="action-modal-item-left">
+                      <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', backgroundColor: '#ffc72c' }}></span>
+                      <span>CIT-U Gold Accent</span>
+                    </div>
+                    {accent === 'cit-gold' && <Check size={14} style={{ color: 'var(--accent-color)' }} />}
                   </div>
-                  {accent === 'cit-gold' && <Check size={14} style={{ color: 'var(--accent-color)' }} />}
-                </div>
-                <div 
-                  className={`action-modal-item ${accent === 'cit-maroon' ? 'active' : ''}`}
-                  onClick={() => handleAccentChange('cit-maroon')}
-                >
-                  <div className="action-modal-item-left">
-                    <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', backgroundColor: '#b31010' }}></span>
-                    <span>CIT-U Maroon Accent</span>
+                  <div 
+                    className={`action-modal-item ${accent === 'cit-maroon' ? 'active' : ''}`}
+                    onClick={() => handleAccentChange('cit-maroon')}
+                  >
+                    <div className="action-modal-item-left">
+                      <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', backgroundColor: '#b31010' }}></span>
+                      <span>CIT-U Maroon Accent</span>
+                    </div>
+                    {accent === 'cit-maroon' && <Check size={14} style={{ color: 'var(--accent-color)' }} />}
                   </div>
-                  {accent === 'cit-maroon' && <Check size={14} style={{ color: 'var(--accent-color)' }} />}
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
+        </div>
+        
+        {/* Separate Spotify Player module below the main pane */}
+        <SpotifyPlayer />
       </div>
+
 
       {/* Touch Mobile Drawer Sheet Details (Dynamic sliding panel) */}
       {showMobileDrawer && selectedItem && (
