@@ -21,6 +21,8 @@ export default function App() {
   
   // Create search input ref to maintain focus
   const searchInputRef = useRef<HTMLInputElement>(null);
+  // Ref to prevent programmatic search clears from resetting selectedIndex
+  const ignoreSearchResetRef = useRef(false);
 
   // Fetch GitHub projects
   const { repos, error } = useGithubRepos(fallbackProfileData.githubUsername);
@@ -192,6 +194,10 @@ export default function App() {
 
   // Keep selected index in bounds when items change
   useEffect(() => {
+    if (ignoreSearchResetRef.current) {
+      ignoreSearchResetRef.current = false;
+      return;
+    }
     setSelectedIndex(0);
   }, [search]);
 
@@ -204,17 +210,26 @@ export default function App() {
     const targetIdxInFlat = flatItemsList.findIndex(item => item.id === targetId);
     if (targetIdxInFlat === -1) return;
 
+    const isMobile = window.innerWidth <= 860;
     const targetIdxInFiltered = filteredItems.findIndex(item => item.id === targetId);
     if (targetIdxInFiltered === -1) {
+      ignoreSearchResetRef.current = true;
       setSearch('');
       setSelectedIndex(targetIdxInFlat);
     } else {
       setSelectedIndex(targetIdxInFiltered);
     }
+
+    // Auto-open detail drawer on mobile when navigating courses
+    if (isMobile) {
+      setShowMobileDrawer(true);
+    }
   };
 
   // Perform navigation or details operations
   const executeItemAction = (item: ListItem) => {
+    const isMobile = window.innerWidth <= 860;
+
     if (item.category === 'navigation') {
       const action = item.rawItem.actionLabel;
       const value = item.rawItem.value;
@@ -226,11 +241,15 @@ export default function App() {
         triggerToast('Email copied to clipboard!');
       }
     } else if (item.category === 'project') {
-      window.open(item.rawItem.html_url, '_blank');
-      triggerToast(`Opening repository link...`);
+      if (isMobile) {
+        setShowMobileDrawer(true);
+      } else {
+        window.open(item.rawItem.html_url, '_blank');
+        triggerToast(`Opening repository link...`);
+      }
     } else {
       // Toggle details drawer on mobile
-      if (window.innerWidth <= 920) {
+      if (isMobile) {
         setShowMobileDrawer(true);
       } else {
         triggerToast(`Selected ${item.name}`);

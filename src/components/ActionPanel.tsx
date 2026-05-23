@@ -29,11 +29,11 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ onActionClick, accent 
           <kbd>↵</kbd> <span>Open / Select</span>
         </span>
         <span 
-          className="keyboard-shortcut-hint" 
+          className="settings-action-trigger" 
           onClick={onActionClick}
           style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-main)', cursor: 'pointer' }}
         >
-          <kbd>Tab</kbd> 
+          <kbd className="keyboard-shortcut-hint">Tab</kbd> 
           <span>Actions ({getAccentLabel()})</span>
           <Settings size={12} style={{ opacity: 0.8 }} />
         </span>
