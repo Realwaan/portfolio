@@ -2,6 +2,7 @@ import React from 'react';
 import { Star, GitFork, Calendar, Link2, Info, Copy, Check, RefreshCw, Cpu, Activity, Terminal } from 'lucide-react';
 import type { Project, Skill, AcademicCourse } from '../data/fallbackData';
 import { CurriculumRoadmap } from './CurriculumRoadmap';
+import { SpotifyPlayer } from './SpotifyPlayer';
 
 // ----------------------------------------------------
 // Sub-component: profile photo rendering helper
@@ -328,7 +329,7 @@ const PhotoboothSimulator: React.FC = () => {
           <div className="polaroid-frame">
             <div className="polaroid-photo-container">
               <img 
-                src="/profile.jpg" 
+                src={import.meta.env.BASE_URL + "profile.jpg"} 
                 alt="Photobooth Subject" 
                 className="polaroid-photo"
                 style={{ filter: filterStyles[filter] }}
@@ -582,205 +583,216 @@ interface DetailPanelProps {
 }
 
 export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedItem, type, onSelectCourseCode }) => {
-  if (!selectedItem) {
-    return (
-      <div className="detail-pane" style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <div style={{ textAlign: 'center', color: 'var(--text-dimmed)' }}>
-          <Info size={32} style={{ marginBottom: 8, opacity: 0.5, margin: '0 auto' }} />
-          <p style={{ fontSize: '13px' }}>Select an item to view details</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (type === 'welcome') {
-    return (
-      <div className="detail-pane">
-        <div className="welcome-header-layout">
-          <div className="detail-header" style={{ flex: 1, marginBottom: 0 }}>
-            <div className="detail-category">CIT-U Wildcats</div>
-            <h2 className="detail-title">{selectedItem.name}</h2>
-            <p className="detail-subtitle">{selectedItem.title}</p>
-          </div>
-          {selectedItem.avatarUrl && (
-            <ProfileImage src={selectedItem.avatarUrl} alt={selectedItem.name} />
-          )}
-        </div>
-        <div className="detail-body" style={{ marginTop: 18 }}>
-          <div className="detail-section-title">Academic Motto</div>
-          <p style={{ fontStyle: 'italic', marginBottom: 16, color: 'var(--accent-color)' }}>
-            "{selectedItem.motto}"
-          </p>
-
-          <div className="detail-section-title">About Me</div>
-          <p className="detail-description">{selectedItem.about}</p>
-
-          <div className="detail-section-title">Quick Stats</div>
-          <div className="stats-row" style={{ flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Degree Program:</span>
-              <span style={{ fontWeight: 500 }}>BS Computer Science</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Year Level:</span>
-              <span style={{ fontWeight: 500 }}>1st Year (BSCS 1)</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Institution:</span>
-              <span style={{ fontWeight: 500 }}>CIT-University</span>
-            </div>
+  const renderContent = () => {
+    if (!selectedItem) {
+      return (
+        <div className="detail-pane" style={{ justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ textAlign: 'center', color: 'var(--text-dimmed)' }}>
+            <Info size={32} style={{ marginBottom: 8, opacity: 0.5, margin: '0 auto' }} />
+            <p style={{ fontSize: '13px' }}>Select an item to view details</p>
           </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  if (type === 'project') {
-    const project = selectedItem as Project;
-
-    return (
-      <div className="detail-pane">
-        <div className="detail-header">
-          <div className="detail-category">{project.language} Extension</div>
-          <h2 className="detail-title">{project.name}</h2>
-          <a
-            href={project.html_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="detail-subtitle"
-            style={{ display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', color: 'var(--text-muted)' }}
-          >
-            <Link2 size={13} /> Open Repository
-          </a>
-        </div>
-
-        <div className="detail-body">
-          <div className="detail-section-title">Description</div>
-          <p className="detail-description">{project.description}</p>
-
-          <div className="detail-section-title">Repository Stats</div>
-          <div className="stats-row">
-            <div className="stat-item">
-              <Star size={14} />
-              <span>{project.stargazers_count} stars</span>
+    if (type === 'welcome') {
+      return (
+        <div className="detail-pane">
+          <div className="welcome-header-layout">
+            <div className="detail-header" style={{ flex: 1, marginBottom: 0 }}>
+              <div className="detail-category">CIT-U Wildcats</div>
+              <h2 className="detail-title">{selectedItem.name}</h2>
+              <p className="detail-subtitle">{selectedItem.title}</p>
             </div>
-            <div className="stat-item">
-              <GitFork size={14} />
-              <span>{project.forks_count} forks</span>
-            </div>
-            <div className="stat-item">
-              <Calendar size={14} />
-              <span>{new Date(project.updated_at).toLocaleDateString()}</span>
-            </div>
+            {selectedItem.avatarUrl && (
+              <ProfileImage src={selectedItem.avatarUrl} alt={selectedItem.name} />
+            )}
           </div>
+          <div className="detail-body" style={{ marginTop: 18 }}>
+            <div className="detail-section-title">Academic Motto</div>
+            <p style={{ fontStyle: 'italic', marginBottom: 16, color: 'var(--accent-color)' }}>
+              "{selectedItem.motto}"
+            </p>
 
-          {project.topics.length > 0 && (
-            <>
-              <div className="detail-section-title">Topics</div>
-              <div className="tags-list">
-                {project.topics.map((topic) => (
-                  <span key={topic} className="tag">
-                    {topic}
-                  </span>
-                ))}
+            <div className="detail-section-title">About Me</div>
+            <p className="detail-description">{selectedItem.about}</p>
+
+            <div className="detail-section-title">Quick Stats</div>
+            <div className="stats-row" style={{ flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Degree Program:</span>
+                <span style={{ fontWeight: 500 }}>BS Computer Science</span>
               </div>
-            </>
-          )}
-
-          {/* Interactive Project Showcase Widget */}
-          <div className="detail-section-title">Interactive Showcase</div>
-          {project.name === 'Tihik' && <TihikSimulator />}
-          {project.name === 'islaweave' && <IslaweaveSimulator />}
-          {project.name === 'kessh' && <KesshSimulator />}
-          {project.name === 'PhotoboothV2' && <PhotoboothSimulator />}
-          {project.name === 'website-associate-bot' && <BotSimulator />}
-          {project.name === 'dreikesh' && <DreikeshSimulator />}
-          {project.name === 'swotlib-domains-ng-edu-cit.txt' && <SwotlibSimulator />}
-
-          {/* clipboard copy widget */}
-          <GitCloneWidget repoName={project.name} />
-        </div>
-      </div>
-    );
-  }
-
-  if (type === 'skill') {
-    const skill = selectedItem as Skill;
-    return (
-      <div className="detail-pane">
-        <div className="detail-header">
-          <div className="detail-category">{skill.category} extension</div>
-          <h2 className="detail-title">{skill.name}</h2>
-          <p className="detail-subtitle">{skill.level} Proficiency</p>
-        </div>
-
-        <div className="detail-body">
-          <div className="detail-section-title">Capability Brief</div>
-          <p className="detail-description">
-            {skill.category === 'languages' && `Familiarity with syntax, debugging compilers, and utilizing basic structure algorithms in ${skill.name}.`}
-            {skill.category === 'tools' && `Daily usage of ${skill.name} for local environment workspace management, version control, or execution workflows.`}
-            {skill.category === 'concepts' && `Theoretical and hands-on comprehension of ${skill.name} applied during computer science laboratory tasks.`}
-          </p>
-
-          <div className="detail-section-title">Proficiency Metrics</div>
-          <div className="stats-row" style={{ flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Competency Level:</span>
-              <span style={{ color: 'var(--accent-color)', fontWeight: 600 }}>{skill.level}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Category Classification:</span>
-              <span style={{ textTransform: 'capitalize' }}>{skill.category}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Year Level:</span>
+                <span style={{ fontWeight: 500 }}>1st Year (BSCS 1)</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Institution:</span>
+                <span style={{ fontWeight: 500 }}>CIT-University</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  if (type === 'course') {
-    const course = selectedItem as AcademicCourse;
-    return (
-      <CurriculumRoadmap
-        selectedCourseCode={course.code}
-        onSelectCourse={(code) => {
-          if (onSelectCourseCode) {
-            onSelectCourseCode(code);
-          }
-        }}
-      />
-    );
-  }
+    if (type === 'project') {
+      const project = selectedItem as Project;
 
-  if (type === 'navigation') {
-    return (
-      <div className="detail-pane">
-        <div className="detail-header">
-          <div className="detail-category">Social Communication</div>
-          <h2 className="detail-title">{selectedItem.name}</h2>
-          <p className="detail-subtitle">Direct action shortcut</p>
-        </div>
+      return (
+        <div className="detail-pane">
+          <div className="detail-header">
+            <div className="detail-category">{project.language} Extension</div>
+            <h2 className="detail-title">{project.name}</h2>
+            <a
+              href={project.html_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="detail-subtitle"
+              style={{ display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', color: 'var(--text-muted)' }}
+            >
+              <Link2 size={13} /> Open Repository
+            </a>
+          </div>
 
-        <div className="detail-body">
-          <div className="detail-section-title">Action Detail</div>
-          <p className="detail-description">
-            Selecting this item triggers a redirection or copies details to your clipboard.
-          </p>
+          <div className="detail-body">
+            <div className="detail-section-title">Description</div>
+            <p className="detail-description">{project.description}</p>
 
-          <div className="stats-row" style={{ flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Target Action:</span>
-              <span style={{ color: 'var(--accent-color)', fontWeight: 500 }}>{selectedItem.actionLabel}</span>
+            <div className="detail-section-title">Repository Stats</div>
+            <div className="stats-row">
+              <div className="stat-item">
+                <Star size={14} />
+                <span>{project.stargazers_count} stars</span>
+              </div>
+              <div className="stat-item">
+                <GitFork size={14} />
+                <span>{project.forks_count} forks</span>
+              </div>
+              <div className="stat-item">
+                <Calendar size={14} />
+                <span>{new Date(project.updated_at).toLocaleDateString()}</span>
+              </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Destination URI:</span>
-              <span style={{ wordBreak: 'break-all', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>{selectedItem.value}</span>
+
+            {project.topics.length > 0 && (
+              <>
+                <div className="detail-section-title">Topics</div>
+                <div className="tags-list">
+                  {project.topics.map((topic) => (
+                    <span key={topic} className="tag">
+                      {topic}
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Interactive Project Showcase Widget */}
+            <div className="detail-section-title">Interactive Showcase</div>
+            {project.name === 'Tihik' && <TihikSimulator />}
+            {project.name === 'islaweave' && <IslaweaveSimulator />}
+            {project.name === 'kessh' && <KesshSimulator />}
+            {project.name === 'PhotoboothV2' && <PhotoboothSimulator />}
+            {project.name === 'website-associate-bot' && <BotSimulator />}
+            {project.name === 'dreikesh' && <DreikeshSimulator />}
+            {project.name === 'swotlib-domains-ng-edu-cit.txt' && <SwotlibSimulator />}
+
+            {/* clipboard copy widget */}
+            <GitCloneWidget repoName={project.name} />
+          </div>
+        </div>
+      );
+    }
+
+    if (type === 'skill') {
+      const skill = selectedItem as Skill;
+      return (
+        <div className="detail-pane">
+          <div className="detail-header">
+            <div className="detail-category">{skill.category} extension</div>
+            <h2 className="detail-title">{skill.name}</h2>
+            <p className="detail-subtitle">{skill.level} Proficiency</p>
+          </div>
+
+          <div className="detail-body">
+            <div className="detail-section-title">Capability Brief</div>
+            <p className="detail-description">
+              {skill.category === 'languages' && `Familiarity with syntax, debugging compilers, and utilizing basic structure algorithms in ${skill.name}.`}
+              {skill.category === 'tools' && `Daily usage of ${skill.name} for local environment workspace management, version control, or execution workflows.`}
+              {skill.category === 'concepts' && `Theoretical and hands-on comprehension of ${skill.name} applied during computer science laboratory tasks.`}
+            </p>
+
+            <div className="detail-section-title">Proficiency Metrics</div>
+            <div className="stats-row" style={{ flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Competency Level:</span>
+                <span style={{ color: 'var(--accent-color)', fontWeight: 600 }}>{skill.level}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Category Classification:</span>
+                <span style={{ textTransform: 'capitalize' }}>{skill.category}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  return null;
+    if (type === 'course') {
+      const course = selectedItem as AcademicCourse;
+      return (
+        <CurriculumRoadmap
+          selectedCourseCode={course.code}
+          onSelectCourse={(code) => {
+            if (onSelectCourseCode) {
+              onSelectCourseCode(code);
+            }
+          }}
+        />
+      );
+    }
+
+    if (type === 'navigation') {
+      return (
+        <div className="detail-pane">
+          <div className="detail-header">
+            <div className="detail-category">Social Communication</div>
+            <h2 className="detail-title">{selectedItem.name}</h2>
+            <p className="detail-subtitle">Direct action shortcut</p>
+          </div>
+
+          <div className="detail-body">
+            <div className="detail-section-title">Action Detail</div>
+            <p className="detail-description">
+              Selecting this item triggers a redirection or copies details to your clipboard.
+            </p>
+
+            <div className="stats-row" style={{ flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Target Action:</span>
+                <span style={{ color: 'var(--accent-color)', fontWeight: 500 }}>{selectedItem.actionLabel}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Destination URI:</span>
+                <span style={{ wordBreak: 'break-all', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>{selectedItem.value}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <div className="detail-panel-layout">
+      <div className="detail-panel-scrollable">
+        {renderContent()}
+      </div>
+      <SpotifyPlayer />
+    </div>
+  );
 };

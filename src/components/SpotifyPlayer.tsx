@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Music2, X, ChevronUp, ChevronDown, Disc3 } from 'lucide-react';
+import { Music2, Disc3 } from 'lucide-react';
 
 interface Track {
   id: string;
@@ -20,7 +20,7 @@ const NIKI_TRACKS: Track[] = [
     color: '#f9a8d4', // pink
   },
   {
-    id: '0n7Lw6Q015oB2kS4W18hLp',
+    id: '6gS46n812ZzY8f4sJ9M8Vv',
     title: 'Autumn',
     artist: 'NIKI',
     albumHint: 'NICOLE',
@@ -28,7 +28,7 @@ const NIKI_TRACKS: Track[] = [
     color: '#fb923c', // autumn orange
   },
   {
-    id: '2sYjH01u9L4lV24hG9i5Lh',
+    id: '6Z5A1m1v5lXp6d3h83hHhW',
     title: 'Take a Chance with Me',
     artist: 'NIKI',
     albumHint: 'NICOLE',
@@ -38,112 +38,73 @@ const NIKI_TRACKS: Track[] = [
 ];
 
 export const SpotifyPlayer: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
   const [activeTrack, setActiveTrack] = useState(0);
-
   const track = NIKI_TRACKS[activeTrack];
 
   return (
-    <>
-      {/* Floating toggle button (always visible) */}
-      {!isOpen && (
-        <button
-          className="spotify-fab"
-          onClick={() => setIsOpen(true)}
-          aria-label="Open Spotify Player"
-          title="Now Playing — NIKI"
-        >
-          <Disc3 size={18} className="spotify-fab-icon" />
-          <span className="spotify-fab-label">NIKI</span>
-        </button>
-      )}
+    <div className="spotify-player-inline" onClick={(e) => e.stopPropagation()}>
+      {/* Header */}
+      <div className="spotify-panel-header">
+        <div className="spotify-header-left">
+          <div className="spotify-logo-dot" />
+          <span className="spotify-panel-title">
+            <Music2 size={11} style={{ marginRight: 4 }} />
+            Spotify — NIKI Faves
+          </span>
+        </div>
+        <div className="spotify-header-right">
+          <Disc3 size={11} className="spotify-fab-icon" />
+          <span className="spotify-premium-lbl">Premium Embed</span>
+        </div>
+      </div>
 
-      {/* Mini player panel */}
-      {isOpen && (
-        <div className={`spotify-player-panel ${isMinimized ? 'minimized' : ''}`}>
-          {/* Header */}
-          <div className="spotify-panel-header">
-            <div className="spotify-header-left">
-              <div className="spotify-logo-dot" />
-              <span className="spotify-panel-title">
-                <Music2 size={11} style={{ marginRight: 4 }} />
-                Spotify — NIKI Faves
+      {/* Main Content (Horizontal Flex for Compact Size) */}
+      <div className="spotify-inline-body">
+        {/* Track picker & meta on the left */}
+        <div className="spotify-inline-left">
+          <div className="spotify-track-tabs-vertical">
+            {NIKI_TRACKS.map((t, i) => (
+              <button
+                key={t.id}
+                className={`spotify-track-tab ${activeTrack === i ? 'active' : ''}`}
+                style={activeTrack === i ? { borderColor: t.color, color: t.color } : {}}
+                onClick={() => setActiveTrack(i)}
+                title={t.title}
+              >
+                <span className="tab-icon-emoji">{i === 0 ? '🌅' : i === 1 ? '🍂' : '✨'}</span>{' '}
+                <span className="spotify-tab-track-name">{t.title}</span>
+              </button>
+            ))}
+          </div>
+          
+          {/* Track meta info */}
+          <div className="spotify-track-meta-inline">
+            <div className="spotify-track-info-row">
+              <span className="spotify-now-playing-dot" style={{ backgroundColor: track.color }} />
+              <span className="spotify-track-meta-label">
+                <span className="meta-song-title" style={{ color: track.color }}>{track.title}</span>
+                <span className="meta-song-sep"> · </span>
+                <span className="meta-song-year">{track.year}</span>
               </span>
             </div>
-            <div className="spotify-header-actions">
-              <button
-                className="spotify-icon-btn"
-                onClick={() => setIsMinimized(!isMinimized)}
-                aria-label={isMinimized ? 'Expand player' : 'Minimize player'}
-                title={isMinimized ? 'Expand' : 'Minimize'}
-              >
-                {isMinimized ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-              </button>
-              <button
-                className="spotify-icon-btn"
-                onClick={() => setIsOpen(false)}
-                aria-label="Close player"
-                title="Close"
-              >
-                <X size={13} />
-              </button>
-            </div>
+            <span className="spotify-album-hint">{track.albumHint}</span>
           </div>
-
-          {/* Track picker */}
-          {!isMinimized && (
-            <>
-              <div className="spotify-track-tabs">
-                {NIKI_TRACKS.map((t, i) => (
-                  <button
-                    key={t.id}
-                    className={`spotify-track-tab ${activeTrack === i ? 'active' : ''}`}
-                    style={activeTrack === i ? { borderColor: t.color, color: t.color } : {}}
-                    onClick={() => setActiveTrack(i)}
-                    title={t.title}
-                  >
-                    {i === 0 ? '🌅' : i === 1 ? '🍂' : '✨'}{' '}
-                    <span className="spotify-tab-track-name">{t.title}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Spotify Embed iframe */}
-              <div className="spotify-embed-wrapper">
-                <iframe
-                  key={track.id}
-                  src={`https://open.spotify.com/embed/track/${track.id}?utm_source=generator&theme=0`}
-                  width="100%"
-                  height="152"
-                  frameBorder="0"
-                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                  loading="lazy"
-                  title={`${track.title} by ${track.artist}`}
-                  style={{ borderRadius: '10px' }}
-                />
-              </div>
-
-              {/* Track meta info */}
-              <div className="spotify-track-meta">
-                <div className="spotify-track-info-row">
-                  <span className="spotify-now-playing-dot" style={{ backgroundColor: track.color }} />
-                  <span className="spotify-track-meta-label">
-                    <span style={{ color: track.color, fontWeight: 600 }}>{track.title}</span>
-                    {' · '}{track.year}
-                  </span>
-                </div>
-                <span className="spotify-album-hint">{track.albumHint}</span>
-              </div>
-
-              <div className="spotify-premium-badge">
-                <span>🎵</span>
-                <span>Streaming via Spotify Premium</span>
-              </div>
-            </>
-          )}
         </div>
-      )}
-    </>
+
+        {/* Spotify Embed iframe (takes up the right side) */}
+        <div className="spotify-embed-wrapper-inline">
+          <iframe
+            key={track.id}
+            src={`https://open.spotify.com/embed/track/${track.id}?utm_source=generator&theme=0`}
+            width="100%"
+            height="80"
+            frameBorder="0"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+            title={`${track.title} by ${track.artist}`}
+          />
+        </div>
+      </div>
+    </div>
   );
 };

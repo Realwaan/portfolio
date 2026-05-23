@@ -8,7 +8,6 @@ import { DetailPanel } from './components/DetailPanel';
 import { ActionPanel } from './components/ActionPanel';
 import { Toast } from './components/Toast';
 import type { ToastItem } from './components/Toast';
-import { SpotifyPlayer } from './components/SpotifyPlayer';
 
 export default function App() {
   const [search, setSearch] = useState('');
@@ -453,9 +452,6 @@ export default function App() {
 
       {/* Floating Micro-Toasts */}
       <Toast toasts={toasts} setToasts={setToasts} />
-
-      {/* Floating Spotify Mini-Player */}
-      <SpotifyPlayer />
 
     </div>
   );

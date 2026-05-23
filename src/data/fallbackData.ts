@@ -57,7 +57,7 @@ export const fallbackProfileData: ProfileData = {
   email: "realwaan.contact@gmail.com",
   githubUsername: "Realwaan",
   linkedin: "https://linkedin.com/in/realwaan",
-  avatarUrl: "/profile.jpg",
+  avatarUrl: import.meta.env.BASE_URL + "profile.jpg",
   projects: [
     {
       id: "fb-1",
