@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Music2, Disc3 } from 'lucide-react';
+import { Music2, Disc3, Volume2 } from 'lucide-react';
 
 interface Track {
   id: string;
@@ -57,7 +57,6 @@ const NIKI_TRACKS: Track[] = [
 
 const TAB_EMOJIS = ['🌅', '🍂', '✨', '🎵', '🌟'];
 
-
 export const SpotifyPlayer: React.FC = () => {
   const [activeTrack, setActiveTrack] = useState(0);
   const track = NIKI_TRACKS[activeTrack];
@@ -69,60 +68,96 @@ export const SpotifyPlayer: React.FC = () => {
         <div className="spotify-header-left">
           <div className="spotify-logo-dot" />
           <span className="spotify-panel-title">
-            <Music2 size={11} style={{ marginRight: 4 }} />
+            <Music2 size={12} style={{ marginRight: 6, color: '#1ed760' }} />
             Spotify — NIKI Faves
           </span>
         </div>
         <div className="spotify-header-right">
-          <Disc3 size={11} className="spotify-fab-icon" />
-          <span className="spotify-premium-lbl">Premium Embed</span>
+          <Volume2 size={12} style={{ marginRight: 4, color: 'var(--text-muted)' }} />
+          <span className="spotify-premium-lbl">Accessory Dock</span>
         </div>
       </div>
 
-      {/* Main Content (Horizontal Flex for Compact Size) */}
+      {/* Main Dashboard Body */}
       <div className="spotify-inline-body">
-        {/* Track picker & meta on the left */}
+        {/* Left Side: Vinyl Deck & Playlist */}
         <div className="spotify-inline-left">
-          <div className="spotify-track-tabs-vertical">
-            {NIKI_TRACKS.map((t, i) => (
-              <button
-                key={t.id}
-                className={`spotify-track-tab ${activeTrack === i ? 'active' : ''}`}
-                style={activeTrack === i ? { borderColor: t.color, color: t.color } : {}}
-                onClick={() => setActiveTrack(i)}
-                title={t.title}
+          {/* Deck with vinyl record and details */}
+          <div className="spotify-deck-panel">
+            <div className="vinyl-record-container">
+              <div 
+                className="vinyl-record" 
+                style={{ 
+                  animationPlayState: 'running',
+                  border: `3px solid ${track.color}`,
+                  boxShadow: `0 0 16px rgba(0,0,0,0.4), 0 0 10px ${track.color}40`
+                }}
               >
-                <span className="tab-icon-emoji">{TAB_EMOJIS[i] || '🎵'}</span>{' '}
-                <span className="spotify-tab-track-name">{t.title}</span>
-              </button>
-            ))}
-          </div>
-          
-          {/* Track meta info */}
-          <div className="spotify-track-meta-inline">
-            <div className="spotify-track-info-row">
-              <span className="spotify-now-playing-dot" style={{ backgroundColor: track.color }} />
-              <span className="spotify-track-meta-label">
-                <span className="meta-song-title" style={{ color: track.color }}>{track.title}</span>
-                <span className="meta-song-sep"> · </span>
-                <span className="meta-song-year">{track.year}</span>
-              </span>
+                <div className="vinyl-groove-1" />
+                <div className="vinyl-groove-2" />
+                <div className="vinyl-middle-label" style={{ backgroundColor: track.color }}>
+                  <span className="vinyl-emoji">{TAB_EMOJIS[activeTrack]}</span>
+                </div>
+              </div>
             </div>
-            <span className="spotify-album-hint">{track.albumHint}</span>
+
+            <div className="spotify-track-deck-meta">
+              <span className="now-playing-deck-lbl" style={{ color: track.color }}>Now Loading</span>
+              <h3 className="deck-song-title" style={{ color: track.color }} title={track.title}>{track.title}</h3>
+              <p className="deck-song-album">{track.albumHint} ({track.year})</p>
+            </div>
+          </div>
+
+          {/* Custom Playlist Container */}
+          <div className="spotify-playlist-container">
+            <div className="playlist-header-row">
+              <Disc3 size={11} className="spotify-fab-icon" />
+              <span>NIKI Selected Tracks</span>
+            </div>
+            
+            <div className="spotify-playlist-rows">
+              {NIKI_TRACKS.map((t, i) => {
+                const isActive = activeTrack === i;
+                return (
+                  <button
+                    key={t.id}
+                    className={`playlist-row-item ${isActive ? 'active' : ''}`}
+                    onClick={() => setActiveTrack(i)}
+                    style={isActive ? { '--active-color': t.color } as React.CSSProperties : {}}
+                  >
+                    <span className="playlist-row-num">0{i + 1}</span>
+                    <div className="playlist-row-details">
+                      <span className="playlist-row-title">{t.title}</span>
+                      <span className="playlist-row-album">{t.type === 'album' ? 'EP / Album' : 'Single'}</span>
+                    </div>
+                    {isActive ? (
+                      <div className="eq-bars">
+                        <span className="eq-bar" style={{ backgroundColor: t.color }}></span>
+                        <span className="eq-bar" style={{ backgroundColor: t.color }}></span>
+                        <span className="eq-bar" style={{ backgroundColor: t.color }}></span>
+                      </div>
+                    ) : (
+                      <span className="playlist-row-emoji">{TAB_EMOJIS[i]}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Spotify Embed iframe (takes up the right side) */}
+        {/* Right Side: Embedded full Spotify Player */}
         <div className="spotify-embed-wrapper-inline">
           <iframe
             key={track.id}
             src={`https://open.spotify.com/embed/${track.type || 'track'}/${track.id}?utm_source=generator&theme=0`}
             width="100%"
-            height="80"
+            height="352"
             frameBorder="0"
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
             loading="lazy"
             title={`${track.title} by ${track.artist}`}
+            style={{ borderRadius: '12px', border: 'none' }}
           />
         </div>
       </div>
