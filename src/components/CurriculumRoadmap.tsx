@@ -7,7 +7,10 @@ import {
   BookOpen, 
   BarChart3, 
   Layers, 
-  HelpCircle
+  HelpCircle,
+  Plus,
+  Minus,
+  RotateCcw
 } from 'lucide-react';
 import { bscsCurriculum, electivesCatalog, bscsSummation } from '../data/curriculumData';
 import type { CourseNode } from '../data/curriculumData';
@@ -67,6 +70,56 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
   const [electiveSearch, setElectiveSearch] = useState('');
   const [electiveGroupFilter, setElectiveGroupFilter] = useState<string | 'all'>('all');
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+
+  // Zoom/Pan States for Mind Map
+  const [zoom, setZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = React.useRef({ x: 0, y: 0 });
+  const svgRef = React.useRef<SVGSVGElement | null>(null);
+
+  // Mouse drag handlers for canvas panning
+  const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (e.button !== 0) return; // Only pan on left click
+    setIsDragging(true);
+    dragStart.current = { x: e.clientX - panOffset.x, y: e.clientY - panOffset.y };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!isDragging) return;
+    setPanOffset({
+      x: e.clientX - dragStart.current.x,
+      y: e.clientY - dragStart.current.y
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Reset zoom & pan on course selection change
+  React.useEffect(() => {
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
+    setIsDragging(false);
+  }, [selectedCourseCode]);
+
+  // Native wheel listener for smooth wheel zooming without passive scroll warnings
+  React.useEffect(() => {
+    const svgEl = svgRef.current;
+    if (!svgEl) return;
+
+    const handleWheelEvent = (e: WheelEvent) => {
+      e.preventDefault();
+      const scaleChange = e.deltaY < 0 ? 0.08 : -0.08;
+      setZoom(z => Math.max(0.5, Math.min(2.5, z + scaleChange)));
+    };
+
+    svgEl.addEventListener('wheel', handleWheelEvent, { passive: false });
+    return () => {
+      svgEl.removeEventListener('wheel', handleWheelEvent);
+    };
+  }, [activeTab, selectedCourseCode]);
 
   // Normalize course code for matching
   const normalizeCode = (code: string) => {
@@ -163,7 +216,18 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
     const nodeHeight = 44;
 
     return (
-      <svg className="mindmap-svg" viewBox="0 0 830 320" width="100%" height="100%">
+      <svg 
+        ref={svgRef}
+        className="mindmap-svg" 
+        viewBox="0 0 830 320" 
+        width="100%" 
+        height="100%"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+      >
         <defs>
           <marker
             id="arrow"
@@ -189,102 +253,108 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
           </marker>
         </defs>
 
-        {/* Draw connectors first so they render underneath the node cards */}
-        <g className="connections-layer">
-          {PIPELINE_LINKS.map((link, idx) => {
-            const fromNode = CORE_PIPELINE.find(n => n.code === link.from);
-            const toNode = CORE_PIPELINE.find(n => n.code === link.to);
-            if (!fromNode || !toNode) return null;
+        <g 
+          transform={`translate(${panOffset.x}, ${panOffset.y}) scale(${zoom})`} 
+          style={{ transformOrigin: 'center', transition: isDragging ? 'none' : 'transform 0.15s ease' }}
+        >
+          {/* Draw connectors first so they render underneath the node cards */}
+          <g className="connections-layer">
+            {PIPELINE_LINKS.map((link, idx) => {
+              const fromNode = CORE_PIPELINE.find(n => n.code === link.from);
+              const toNode = CORE_PIPELINE.find(n => n.code === link.to);
+              if (!fromNode || !toNode) return null;
 
-            const x1 = fromNode.x + nodeWidth;
-            const y1 = fromNode.y + nodeHeight / 2;
-            const x2 = toNode.x;
-            const y2 = toNode.y + nodeHeight / 2;
+              const x1 = fromNode.x + nodeWidth;
+              const y1 = fromNode.y + nodeHeight / 2;
+              const x2 = toNode.x;
+              const y2 = toNode.y + nodeHeight / 2;
 
-            const isLinkActive = hoveredNode === link.from || hoveredNode === link.to;
-            const fromMeta = streamMeta[fromNode.stream] || streamMeta.others;
-            const color = isLinkActive ? 'var(--accent-color)' : fromMeta.lineColor;
+              const isLinkActive = hoveredNode === link.from || hoveredNode === link.to;
+              const fromMeta = streamMeta[fromNode.stream] || streamMeta.others;
+              const color = isLinkActive ? 'var(--accent-color)' : fromMeta.lineColor;
 
-            return (
-              <path
-                key={`link-${idx}`}
-                d={getCurvePath(x1, y1, x2, y2)}
-                fill="none"
-                stroke={color}
-                strokeWidth={isLinkActive ? 2.5 : 1.5}
-                className={isLinkActive ? 'flowing-line' : ''}
-                markerEnd={isLinkActive ? "url(#arrow-active)" : "url(#arrow)"}
-                style={{ transition: 'stroke 0.2s, stroke-width 0.2s' }}
-              />
-            );
-          })}
-        </g>
-
-        {/* Draw node blocks */}
-        <g className="nodes-layer">
-          {CORE_PIPELINE.map(node => {
-            const meta = streamMeta[node.stream] || streamMeta.others;
-            const isHovered = hoveredNode === node.code;
-            const isSelected = normalizeCode(node.code) === normalizedSelectedCode;
-
-            return (
-              <g 
-                key={node.code}
-                className={`mindmap-svg-node-group ${isHovered ? 'hovered' : ''} ${isSelected ? 'selected' : ''}`}
-                transform={`translate(${node.x}, ${node.y})`}
-                onMouseEnter={() => setHoveredNode(node.code)}
-                onMouseLeave={() => setHoveredNode(null)}
-                onClick={() => onSelectCourse(node.code)}
-                style={{ cursor: 'pointer' }}
-              >
-                {/* Node Box */}
-                <rect
-                  width={nodeWidth}
-                  height={nodeHeight}
-                  rx="6"
-                  ry="6"
-                  fill="rgba(18, 18, 20, 0.85)"
-                  stroke={isSelected ? 'var(--accent-color)' : isHovered ? meta.color : meta.border}
-                  strokeWidth={isSelected ? 1.5 : isHovered ? 1.2 : 1}
-                  style={{ transition: 'all 0.2s ease' }}
+              return (
+                <path
+                  key={`link-${idx}`}
+                  d={getCurvePath(x1, y1, x2, y2)}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={isLinkActive ? 2.5 : 1.5}
+                  className={isLinkActive ? 'flowing-line' : ''}
+                  markerEnd={isLinkActive ? "url(#arrow-active)" : "url(#arrow)"}
+                  style={{ transition: 'stroke 0.2s, stroke-width 0.2s' }}
                 />
-                
-                {/* Accent line on left */}
-                <rect
-                  width="3.5"
-                  height={nodeHeight - 8}
-                  rx="1"
-                  x="4"
-                  y="4"
-                  fill={meta.color}
-                />
+              );
+            })}
+          </g>
 
-                {/* Course Code Text */}
-                <text
-                  x="12"
-                  y="18"
-                  fill={isSelected ? 'var(--accent-color)' : isHovered ? meta.color : 'rgba(255, 255, 255, 0.9)'}
-                  fontSize="9.5"
-                  fontWeight="600"
-                  fontFamily="var(--font-mono)"
-                >
-                  {node.code}
-                </text>
+          {/* Draw node blocks */}
+          <g className="nodes-layer">
+            {CORE_PIPELINE.map(node => {
+              const meta = streamMeta[node.stream] || streamMeta.others;
+              const isHovered = hoveredNode === node.code;
+              const isSelected = normalizeCode(node.code) === normalizedSelectedCode;
 
-                {/* Course Title Text (Fitted) */}
-                <text
-                  x="12"
-                  y="30"
-                  fill="rgba(255, 255, 255, 0.6)"
-                  fontSize="8.5"
-                  fontWeight="400"
-                  clipPath="inset(0 8px 0 0)"
+              return (
+                <g 
+                  key={node.code}
+                  className={`mindmap-svg-node-group ${isHovered ? 'hovered' : ''} ${isSelected ? 'selected' : ''}`}
+                  transform={`translate(${node.x}, ${node.y})`}
+                  onMouseEnter={() => setHoveredNode(node.code)}
+                  onMouseLeave={() => setHoveredNode(null)}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={() => onSelectCourse(node.code)}
+                  style={{ cursor: 'pointer' }}
                 >
-                  {node.name.length > 17 ? node.name.slice(0, 15) + '..' : node.name}
-                </text>
-              </g>
-            );
-          })}
+                  {/* Node Box */}
+                  <rect
+                    width={nodeWidth}
+                    height={nodeHeight}
+                    rx="6"
+                    ry="6"
+                    fill="rgba(18, 18, 20, 0.85)"
+                    stroke={isSelected ? 'var(--accent-color)' : isHovered ? meta.color : meta.border}
+                    strokeWidth={isSelected ? 1.5 : isHovered ? 1.2 : 1}
+                    style={{ transition: 'all 0.2s ease' }}
+                  />
+                  
+                  {/* Accent line on left */}
+                  <rect
+                    width="3.5"
+                    height={nodeHeight - 8}
+                    rx="1"
+                    x="4"
+                    y="4"
+                    fill={meta.color}
+                  />
+
+                  {/* Course Code Text */}
+                  <text
+                    x="12"
+                    y="18"
+                    fill={isSelected ? 'var(--accent-color)' : isHovered ? meta.color : 'rgba(255, 255, 255, 0.9)'}
+                    fontSize="9.5"
+                    fontWeight="600"
+                    fontFamily="var(--font-mono)"
+                  >
+                    {node.code}
+                  </text>
+
+                  {/* Course Title Text (Fitted) */}
+                  <text
+                    x="12"
+                    y="30"
+                    fill="rgba(255, 255, 255, 0.6)"
+                    fontSize="8.5"
+                    fontWeight="400"
+                    clipPath="inset(0 8px 0 0)"
+                  >
+                    {node.name.length > 17 ? node.name.slice(0, 15) + '..' : node.name}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
         </g>
       </svg>
     );
@@ -325,7 +395,18 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
     });
 
     return (
-      <svg className="mindmap-svg" viewBox="0 0 830 320" width="100%" height="100%">
+      <svg 
+        ref={svgRef}
+        className="mindmap-svg" 
+        viewBox="0 0 830 320" 
+        width="100%" 
+        height="100%"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+      >
         <defs>
           <marker
             id="arrow"
@@ -351,172 +432,183 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
           </marker>
         </defs>
 
-        {/* Connection paths */}
-        <g className="connections-layer">
-          {/* Prerequisites connections */}
-          {prereqNodes.map((pre, idx) => {
-            const x1 = pre.x + nodeWidth;
-            const y1 = pre.y + nodeHeight / 2;
-            const x2 = coreX;
-            const y2 = coreY + coreHeight / 2;
+        <g 
+          transform={`translate(${panOffset.x}, ${panOffset.y}) scale(${zoom})`} 
+          style={{ transformOrigin: 'center', transition: isDragging ? 'none' : 'transform 0.15s ease' }}
+        >
+          {/* Connection paths */}
+          <g className="connections-layer">
+            {/* Prerequisites connections */}
+            {prereqNodes.map((pre, idx) => {
+              const x1 = pre.x + nodeWidth;
+              const y1 = pre.y + nodeHeight / 2;
+              const x2 = coreX;
+              const y2 = coreY + coreHeight / 2;
 
-            const isHovered = hoveredNode === pre.code;
-            const preMeta = streamMeta[pre.stream] || streamMeta.others;
-            const color = isHovered ? preMeta.color : 'rgba(251, 146, 60, 0.4)';
-
-            return (
-              <path
-                key={`pre-link-${idx}`}
-                d={getCurvePath(x1, y1, x2, y2)}
-                fill="none"
-                stroke={color}
-                strokeWidth={isHovered ? 2.5 : 1.5}
-                className={isHovered ? 'flowing-line' : 'static-flow-pre'}
-                markerEnd={isHovered ? "url(#arrow-active)" : "url(#arrow)"}
-                style={{ strokeDasharray: isHovered ? '6 4' : '4 3', transition: 'stroke 0.2s, stroke-width 0.2s' }}
-              />
-            );
-          })}
-
-          {/* Dependents connections */}
-          {dependentNodes.map((dep, idx) => {
-            const x1 = coreX + coreWidth;
-            const y1 = coreY + coreHeight / 2;
-            const x2 = dep.x;
-            const y2 = dep.y + nodeHeight / 2;
-
-            const isHovered = hoveredNode === dep.code;
-            const depMeta = streamMeta[dep.stream] || streamMeta.others;
-            const color = isHovered ? depMeta.color : 'rgba(96, 165, 250, 0.4)';
-
-            return (
-              <path
-                key={`dep-link-${idx}`}
-                d={getCurvePath(x1, y1, x2, y2)}
-                fill="none"
-                stroke={color}
-                strokeWidth={isHovered ? 2.5 : 1.5}
-                className={isHovered ? 'flowing-line' : 'static-flow-dep'}
-                markerEnd={isHovered ? "url(#arrow-active)" : "url(#arrow)"}
-                style={{ strokeDasharray: isHovered ? '6 4' : '4 3', transition: 'stroke 0.2s, stroke-width 0.2s' }}
-              />
-            );
-          })}
-        </g>
-
-        {/* Nodes rendering */}
-        <g className="nodes-layer">
-          {/* 1. Prerequisites stack (incoming) */}
-          {prereqNodes.length > 0 ? (
-            prereqNodes.map(pre => {
-              const meta = streamMeta[pre.stream] || streamMeta.others;
               const isHovered = hoveredNode === pre.code;
-              return (
-                <g
-                  key={pre.code}
-                  className={`mindmap-svg-node-group ${isHovered ? 'hovered' : ''}`}
-                  transform={`translate(${pre.x}, ${pre.y})`}
-                  onMouseEnter={() => setHoveredNode(pre.code)}
-                  onMouseLeave={() => setHoveredNode(null)}
-                  onClick={() => onSelectCourse(pre.code)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <rect
-                    width={nodeWidth}
-                    height={nodeHeight}
-                    rx="6"
-                    ry="6"
-                    fill="rgba(18, 18, 20, 0.85)"
-                    stroke={isHovered ? meta.color : meta.border}
-                    strokeWidth={isHovered ? 1.5 : 1}
-                  />
-                  <rect width="3.5" height={nodeHeight - 8} rx="1" x="4" y="4" fill={meta.color} />
-                  <text x="12" y="18" fill={isHovered ? meta.color : 'rgba(255, 255, 255, 0.9)'} fontSize="9" fontWeight="600" fontFamily="var(--font-mono)">
-                    {pre.code}
-                  </text>
-                  <text x="12" y="30" fill="rgba(255, 255, 255, 0.6)" fontSize="8" fontWeight="400">
-                    {pre.name.length > 20 ? pre.name.slice(0, 18) + '..' : pre.name}
-                  </text>
-                  <text x={nodeWidth - 32} y="16" fill="rgba(251, 146, 60, 0.8)" fontSize="7" fontWeight="600" fontFamily="var(--font-mono)">PREREQ</text>
-                </g>
-              );
-            })
-          ) : (
-            /* Introductory foundation placeholder */
-            <g transform="translate(40, 110)">
-              <rect width={nodeWidth} height={50} rx="8" ry="8" fill="rgba(255, 255, 255, 0.01)" stroke="rgba(255, 255, 255, 0.08)" strokeDasharray="3 3" />
-              <text x={nodeWidth / 2} y="22" textAnchor="middle" fill="var(--text-dimmed)" fontSize="9" fontWeight="600">🌅 Introductory</text>
-              <text x={nodeWidth / 2} y="34" textAnchor="middle" fill="rgba(255, 255, 255, 0.2)" fontSize="8">No Prerequisites</text>
-            </g>
-          )}
+              const preMeta = streamMeta[pre.stream] || streamMeta.others;
+              const color = isHovered ? preMeta.color : 'rgba(251, 146, 60, 0.4)';
 
-          {/* 2. Core Node (focused) */}
-          <g transform={`translate(${coreX}, ${coreY})`} className="core-node-group">
-            <rect
-              width={coreWidth}
-              height={coreHeight}
-              rx="8"
-              ry="8"
-              fill="rgba(22, 22, 26, 0.9)"
-              stroke="var(--accent-color)"
-              strokeWidth="2"
-              style={{ filter: 'drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.2))' }}
-            />
-            <rect width="4" height={coreHeight - 10} rx="1" x="5" y="5" fill="var(--accent-color)" />
-            <text x="16" y="20" fill="var(--accent-color)" fontSize="11" fontWeight="700" fontFamily="var(--font-mono)">
-              {activeCourse.code}
-            </text>
-            <text x="16" y="32" fill="rgba(255, 255, 255, 0.95)" fontSize="9.5" fontWeight="600">
-              {activeCourse.name.length > 22 ? activeCourse.name.slice(0, 20) + '..' : activeCourse.name}
-            </text>
-            <text x="16" y="44" fill="rgba(255, 255, 255, 0.5)" fontSize="8" fontFamily="var(--font-mono)">
-              {activeCourse.units} Units · Yr{activeCourse.year} Sem{activeCourse.semester}
-            </text>
+              return (
+                <path
+                  key={`pre-link-${idx}`}
+                  d={getCurvePath(x1, y1, x2, y2)}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={isHovered ? 2.5 : 1.5}
+                  className={isHovered ? 'flowing-line' : 'static-flow-pre'}
+                  markerEnd={isHovered ? "url(#arrow-active)" : "url(#arrow)"}
+                  style={{ strokeDasharray: isHovered ? '6 4' : '4 3', transition: 'stroke 0.2s, stroke-width 0.2s' }}
+                />
+              );
+            })}
+
+            {/* Dependents connections */}
+            {dependentNodes.map((dep, idx) => {
+              const x1 = coreX + coreWidth;
+              const y1 = coreY + coreHeight / 2;
+              const x2 = dep.x;
+              const y2 = dep.y + nodeHeight / 2;
+
+              const isHovered = hoveredNode === dep.code;
+              const depMeta = streamMeta[dep.stream] || streamMeta.others;
+              const color = isHovered ? depMeta.color : 'rgba(96, 165, 250, 0.4)';
+
+              return (
+                <path
+                  key={`dep-link-${idx}`}
+                  d={getCurvePath(x1, y1, x2, y2)}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={isHovered ? 2.5 : 1.5}
+                  className={isHovered ? 'flowing-line' : 'static-flow-dep'}
+                  markerEnd={isHovered ? "url(#arrow-active)" : "url(#arrow)"}
+                  style={{ strokeDasharray: isHovered ? '6 4' : '4 3', transition: 'stroke 0.2s, stroke-width 0.2s' }}
+                />
+              );
+            })}
           </g>
 
-          {/* 3. Dependent stack (unlocks) */}
-          {dependentNodes.length > 0 ? (
-            dependentNodes.map(dep => {
-              const meta = streamMeta[dep.stream] || streamMeta.others;
-              const isHovered = hoveredNode === dep.code;
-              return (
-                <g
-                  key={dep.code}
-                  className={`mindmap-svg-node-group ${isHovered ? 'hovered' : ''}`}
-                  transform={`translate(${dep.x}, ${dep.y})`}
-                  onMouseEnter={() => setHoveredNode(dep.code)}
-                  onMouseLeave={() => setHoveredNode(null)}
-                  onClick={() => onSelectCourse(dep.code)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <rect
-                    width={nodeWidth}
-                    height={nodeHeight}
-                    rx="6"
-                    ry="6"
-                    fill="rgba(18, 18, 20, 0.85)"
-                    stroke={isHovered ? meta.color : meta.border}
-                    strokeWidth={isHovered ? 1.5 : 1}
-                  />
-                  <rect width="3.5" height={nodeHeight - 8} rx="1" x="4" y="4" fill={meta.color} />
-                  <text x="12" y="18" fill={isHovered ? meta.color : 'rgba(255, 255, 255, 0.9)'} fontSize="9" fontWeight="600" fontFamily="var(--font-mono)">
-                    {dep.code}
-                  </text>
-                  <text x="12" y="30" fill="rgba(255, 255, 255, 0.6)" fontSize="8" fontWeight="400">
-                    {dep.name.length > 20 ? dep.name.slice(0, 18) + '..' : dep.name}
-                  </text>
-                  <text x={nodeWidth - 36} y="16" fill="rgba(96, 165, 250, 0.8)" fontSize="7" fontWeight="600" fontFamily="var(--font-mono)">UNLOCKS</text>
-                </g>
-              );
-            })
-          ) : (
-            /* Terminal course placeholder */
-            <g transform="translate(560, 110)">
-              <rect width={nodeWidth} height={50} rx="8" ry="8" fill="rgba(255, 255, 255, 0.01)" stroke="rgba(255, 255, 255, 0.08)" strokeDasharray="3 3" />
-              <text x={nodeWidth / 2} y="22" textAnchor="middle" fill="var(--text-dimmed)" fontSize="9" fontWeight="600">🏆 Terminal Node</text>
-              <text x={nodeWidth / 2} y="34" textAnchor="middle" fill="rgba(255, 255, 255, 0.2)" fontSize="8">Final Pathway Subject</text>
+          {/* Nodes rendering */}
+          <g className="nodes-layer">
+            {/* 1. Prerequisites stack (incoming) */}
+            {prereqNodes.length > 0 ? (
+              prereqNodes.map(pre => {
+                const meta = streamMeta[pre.stream] || streamMeta.others;
+                const isHovered = hoveredNode === pre.code;
+                return (
+                  <g
+                    key={pre.code}
+                    className={`mindmap-svg-node-group ${isHovered ? 'hovered' : ''}`}
+                    transform={`translate(${pre.x}, ${pre.y})`}
+                    onMouseEnter={() => setHoveredNode(pre.code)}
+                    onMouseLeave={() => setHoveredNode(null)}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={() => onSelectCourse(pre.code)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <rect
+                      width={nodeWidth}
+                      height={nodeHeight}
+                      rx="6"
+                      ry="6"
+                      fill="rgba(18, 18, 20, 0.85)"
+                      stroke={isHovered ? meta.color : meta.border}
+                      strokeWidth={isHovered ? 1.5 : 1}
+                    />
+                    <rect width="3.5" height={nodeHeight - 8} rx="1" x="4" y="4" fill={meta.color} />
+                    <text x="12" y="18" fill={isHovered ? meta.color : 'rgba(255, 255, 255, 0.9)'} fontSize="9" fontWeight="600" fontFamily="var(--font-mono)">
+                      {pre.code}
+                    </text>
+                    <text x="12" y="30" fill="rgba(255, 255, 255, 0.6)" fontSize="8" fontWeight="400">
+                      {pre.name.length > 20 ? pre.name.slice(0, 18) + '..' : pre.name}
+                    </text>
+                    <text x={nodeWidth - 32} y="16" fill="rgba(251, 146, 60, 0.8)" fontSize="7" fontWeight="600" fontFamily="var(--font-mono)">PREREQ</text>
+                  </g>
+                );
+              })
+            ) : (
+              /* Introductory foundation placeholder */
+              <g transform="translate(40, 110)">
+                <rect width={nodeWidth} height={50} rx="8" ry="8" fill="rgba(255, 255, 255, 0.01)" stroke="rgba(255, 255, 255, 0.08)" strokeDasharray="3 3" />
+                <text x={nodeWidth / 2} y="22" textAnchor="middle" fill="var(--text-dimmed)" fontSize="9" fontWeight="600">🌅 Introductory</text>
+                <text x={nodeWidth / 2} y="34" textAnchor="middle" fill="rgba(255, 255, 255, 0.2)" fontSize="8">No Prerequisites</text>
+              </g>
+            )}
+
+            {/* 2. Core Node (focused) */}
+            <g 
+              transform={`translate(${coreX}, ${coreY})`} 
+              className="core-node-group"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <rect
+                width={coreWidth}
+                height={coreHeight}
+                rx="8"
+                ry="8"
+                fill="rgba(22, 22, 26, 0.9)"
+                stroke="var(--accent-color)"
+                strokeWidth="2"
+                style={{ filter: 'drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.2))' }}
+              />
+              <rect width="4" height={coreHeight - 10} rx="1" x="5" y="5" fill="var(--accent-color)" />
+              <text x="16" y="20" fill="var(--accent-color)" fontSize="11" fontWeight="700" fontFamily="var(--font-mono)">
+                {activeCourse.code}
+              </text>
+              <text x="16" y="32" fill="rgba(255, 255, 255, 0.95)" fontSize="9.5" fontWeight="600">
+                {activeCourse.name.length > 22 ? activeCourse.name.slice(0, 20) + '..' : activeCourse.name}
+              </text>
+              <text x="16" y="44" fill="rgba(255, 255, 255, 0.5)" fontSize="8" fontFamily="var(--font-mono)">
+                {activeCourse.units} Units · Yr{activeCourse.year} Sem{activeCourse.semester}
+              </text>
             </g>
-          )}
+
+            {/* 3. Dependent stack (unlocks) */}
+            {dependentNodes.length > 0 ? (
+              dependentNodes.map(dep => {
+                const meta = streamMeta[dep.stream] || streamMeta.others;
+                const isHovered = hoveredNode === dep.code;
+                return (
+                  <g
+                    key={dep.code}
+                    className={`mindmap-svg-node-group ${isHovered ? 'hovered' : ''}`}
+                    transform={`translate(${dep.x}, ${dep.y})`}
+                    onMouseEnter={() => setHoveredNode(dep.code)}
+                    onMouseLeave={() => setHoveredNode(null)}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={() => onSelectCourse(dep.code)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <rect
+                      width={nodeWidth}
+                      height={nodeHeight}
+                      rx="6"
+                      ry="6"
+                      fill="rgba(18, 18, 20, 0.85)"
+                      stroke={isHovered ? meta.color : meta.border}
+                      strokeWidth={isHovered ? 1.5 : 1}
+                    />
+                    <rect width="3.5" height={nodeHeight - 8} rx="1" x="4" y="4" fill={meta.color} />
+                    <text x="12" y="18" fill={isHovered ? meta.color : 'rgba(255, 255, 255, 0.9)'} fontSize="9" fontWeight="600" fontFamily="var(--font-mono)">
+                      {dep.code}
+                    </text>
+                    <text x="12" y="30" fill="rgba(255, 255, 255, 0.6)" fontSize="8" fontWeight="400">
+                      {dep.name.length > 20 ? dep.name.slice(0, 18) + '..' : dep.name}
+                    </text>
+                    <text x={nodeWidth - 36} y="16" fill="rgba(96, 165, 250, 0.8)" fontSize="7" fontWeight="600" fontFamily="var(--font-mono)">UNLOCKS</text>
+                  </g>
+                );
+              })
+            ) : (
+              /* Terminal course placeholder */
+              <g transform="translate(560, 110)">
+                <rect width={nodeWidth} height={50} rx="8" ry="8" fill="rgba(255, 255, 255, 0.01)" stroke="rgba(255, 255, 255, 0.08)" strokeDasharray="3 3" />
+                <text x={nodeWidth / 2} y="22" textAnchor="middle" fill="var(--text-dimmed)" fontSize="9" fontWeight="600">🏆 Terminal Node</text>
+                <text x={nodeWidth / 2} y="34" textAnchor="middle" fill="rgba(255, 255, 255, 0.2)" fontSize="8">Final Pathway Subject</text>
+              </g>
+            )}
+          </g>
         </g>
       </svg>
     );
@@ -591,9 +683,37 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
             </div>
 
             {/* SVG responsive scrolling canvas */}
-            <div className="mindmap-svg-scroll-wrapper">
+            <div className="mindmap-svg-scroll-wrapper" style={{ position: 'relative' }}>
               <div className="mindmap-svg-canvas">
                 {activeCourse ? renderFocusedTree() : renderOverviewGraph()}
+              </div>
+
+              {/* Floating Zoom Controls */}
+              <div className="mindmap-zoom-controls" onMouseDown={(e) => e.stopPropagation()}>
+                <button 
+                  className="zoom-btn" 
+                  onClick={(e) => { e.stopPropagation(); setZoom(z => Math.min(2.5, z + 0.15)); }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  title="Zoom In"
+                >
+                  <Plus size={12} />
+                </button>
+                <button 
+                  className="zoom-btn" 
+                  onClick={(e) => { e.stopPropagation(); setZoom(z => Math.max(0.5, z - 0.15)); }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  title="Zoom Out"
+                >
+                  <Minus size={12} />
+                </button>
+                <button 
+                  className="zoom-btn" 
+                  onClick={(e) => { e.stopPropagation(); setZoom(1); setPanOffset({ x: 0, y: 0 }); }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  title="Reset View"
+                >
+                  <RotateCcw size={12} />
+                </button>
               </div>
             </div>
 
