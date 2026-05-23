@@ -100,13 +100,13 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
 
   // Stream Meta Helper
   const streamMeta = {
-    'computing': { name: 'Computing Foundations', color: '#c084fc', border: 'rgba(192, 132, 252, 0.3)', bg: 'rgba(192, 132, 252, 0.07)' },
-    'programming': { name: 'Programming & Dev', color: '#34d399', border: 'rgba(52, 211, 153, 0.3)', bg: 'rgba(52, 211, 153, 0.07)' },
-    'math-theory': { name: 'Mathematics & Theory', color: '#fbbf24', border: 'rgba(251, 191, 36, 0.3)', bg: 'rgba(251, 191, 36, 0.07)' },
-    'systems-networks': { name: 'Systems & Networks', color: '#60a5fa', border: 'rgba(96, 165, 250, 0.3)', bg: 'rgba(96, 165, 250, 0.07)' },
-    'ge': { name: 'General Education', color: '#e2e8f0', border: 'rgba(226, 232, 240, 0.2)', bg: 'rgba(226, 232, 240, 0.04)' },
-    'elective': { name: 'Track Elective', color: '#f472b6', border: 'rgba(244, 114, 182, 0.3)', bg: 'rgba(244, 114, 182, 0.07)' },
-    'others': { name: 'PE / NSTP / Others', color: '#9ca3af', border: 'rgba(156, 163, 175, 0.2)', bg: 'rgba(156, 163, 175, 0.04)' }
+    'computing': { name: 'Computing Foundations', color: '#c084fc', border: 'rgba(192, 132, 252, 0.45)', bg: 'rgba(192, 132, 252, 0.08)', lineColor: 'rgba(192, 132, 252, 0.28)' },
+    'programming': { name: 'Programming & Dev', color: '#34d399', border: 'rgba(52, 211, 153, 0.45)', bg: 'rgba(52, 211, 153, 0.08)', lineColor: 'rgba(52, 211, 153, 0.28)' },
+    'math-theory': { name: 'Mathematics & Theory', color: '#fbbf24', border: 'rgba(251, 191, 36, 0.45)', bg: 'rgba(251, 191, 36, 0.08)', lineColor: 'rgba(251, 191, 36, 0.28)' },
+    'systems-networks': { name: 'Systems & Networks', color: '#60a5fa', border: 'rgba(96, 165, 250, 0.45)', bg: 'rgba(96, 165, 250, 0.08)', lineColor: 'rgba(96, 165, 250, 0.28)' },
+    'ge': { name: 'General Education', color: '#e2e8f0', border: 'rgba(226, 232, 240, 0.35)', bg: 'rgba(226, 232, 240, 0.05)', lineColor: 'rgba(226, 232, 240, 0.2)' },
+    'elective': { name: 'Track Elective', color: '#f472b6', border: 'rgba(244, 114, 182, 0.45)', bg: 'rgba(244, 114, 182, 0.08)', lineColor: 'rgba(244, 114, 182, 0.28)' },
+    'others': { name: 'PE / NSTP / Others', color: '#9ca3af', border: 'rgba(156, 163, 175, 0.35)', bg: 'rgba(156, 163, 175, 0.04)', lineColor: 'rgba(156, 163, 175, 0.2)' }
   };
 
   // Group curriculum by year and semester
@@ -164,6 +164,31 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
 
     return (
       <svg className="mindmap-svg" viewBox="0 0 830 320" width="100%" height="100%">
+        <defs>
+          <marker
+            id="arrow"
+            viewBox="0 0 10 10"
+            refX="6"
+            refY="5"
+            markerWidth="5"
+            markerHeight="5"
+            orient="auto-start-reverse"
+          >
+            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="rgba(255, 255, 255, 0.25)" />
+          </marker>
+          <marker
+            id="arrow-active"
+            viewBox="0 0 10 10"
+            refX="6"
+            refY="5"
+            markerWidth="5"
+            markerHeight="5"
+            orient="auto-start-reverse"
+          >
+            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="var(--accent-color)" />
+          </marker>
+        </defs>
+
         {/* Draw connectors first so they render underneath the node cards */}
         <g className="connections-layer">
           {PIPELINE_LINKS.map((link, idx) => {
@@ -177,7 +202,8 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
             const y2 = toNode.y + nodeHeight / 2;
 
             const isLinkActive = hoveredNode === link.from || hoveredNode === link.to;
-            const color = isLinkActive ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.08)';
+            const fromMeta = streamMeta[fromNode.stream] || streamMeta.others;
+            const color = isLinkActive ? 'var(--accent-color)' : fromMeta.lineColor;
 
             return (
               <path
@@ -185,8 +211,9 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
                 d={getCurvePath(x1, y1, x2, y2)}
                 fill="none"
                 stroke={color}
-                strokeWidth={isLinkActive ? 2 : 1}
+                strokeWidth={isLinkActive ? 2.5 : 1.5}
                 className={isLinkActive ? 'flowing-line' : ''}
+                markerEnd={isLinkActive ? "url(#arrow-active)" : "url(#arrow)"}
                 style={{ transition: 'stroke 0.2s, stroke-width 0.2s' }}
               />
             );
@@ -216,8 +243,8 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
                   height={nodeHeight}
                   rx="6"
                   ry="6"
-                  fill="rgba(18, 18, 20, 0.75)"
-                  stroke={isSelected ? 'var(--accent-color)' : isHovered ? meta.color : 'var(--border-color)'}
+                  fill="rgba(18, 18, 20, 0.85)"
+                  stroke={isSelected ? 'var(--accent-color)' : isHovered ? meta.color : meta.border}
                   strokeWidth={isSelected ? 1.5 : isHovered ? 1.2 : 1}
                   style={{ transition: 'all 0.2s ease' }}
                 />
@@ -236,7 +263,7 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
                 <text
                   x="12"
                   y="18"
-                  fill={isSelected ? 'var(--accent-color)' : isHovered ? meta.color : 'var(--text-main)'}
+                  fill={isSelected ? 'var(--accent-color)' : isHovered ? meta.color : 'rgba(255, 255, 255, 0.9)'}
                   fontSize="9.5"
                   fontWeight="600"
                   fontFamily="var(--font-mono)"
@@ -248,7 +275,7 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
                 <text
                   x="12"
                   y="30"
-                  fill="var(--text-muted)"
+                  fill="rgba(255, 255, 255, 0.6)"
                   fontSize="8.5"
                   fontWeight="400"
                   clipPath="inset(0 8px 0 0)"
@@ -299,6 +326,31 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
 
     return (
       <svg className="mindmap-svg" viewBox="0 0 830 320" width="100%" height="100%">
+        <defs>
+          <marker
+            id="arrow"
+            viewBox="0 0 10 10"
+            refX="6"
+            refY="5"
+            markerWidth="5"
+            markerHeight="5"
+            orient="auto-start-reverse"
+          >
+            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="rgba(255, 255, 255, 0.25)" />
+          </marker>
+          <marker
+            id="arrow-active"
+            viewBox="0 0 10 10"
+            refX="6"
+            refY="5"
+            markerWidth="5"
+            markerHeight="5"
+            orient="auto-start-reverse"
+          >
+            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="var(--accent-color)" />
+          </marker>
+        </defs>
+
         {/* Connection paths */}
         <g className="connections-layer">
           {/* Prerequisites connections */}
@@ -310,7 +362,7 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
 
             const isHovered = hoveredNode === pre.code;
             const preMeta = streamMeta[pre.stream] || streamMeta.others;
-            const color = isHovered ? preMeta.color : 'rgba(251, 146, 60, 0.35)';
+            const color = isHovered ? preMeta.color : 'rgba(251, 146, 60, 0.4)';
 
             return (
               <path
@@ -318,8 +370,9 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
                 d={getCurvePath(x1, y1, x2, y2)}
                 fill="none"
                 stroke={color}
-                strokeWidth={isHovered ? 2.5 : 1.2}
+                strokeWidth={isHovered ? 2.5 : 1.5}
                 className={isHovered ? 'flowing-line' : 'static-flow-pre'}
+                markerEnd={isHovered ? "url(#arrow-active)" : "url(#arrow)"}
                 style={{ strokeDasharray: isHovered ? '6 4' : '4 3', transition: 'stroke 0.2s, stroke-width 0.2s' }}
               />
             );
@@ -334,7 +387,7 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
 
             const isHovered = hoveredNode === dep.code;
             const depMeta = streamMeta[dep.stream] || streamMeta.others;
-            const color = isHovered ? depMeta.color : 'rgba(96, 165, 250, 0.35)';
+            const color = isHovered ? depMeta.color : 'rgba(96, 165, 250, 0.4)';
 
             return (
               <path
@@ -342,8 +395,9 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
                 d={getCurvePath(x1, y1, x2, y2)}
                 fill="none"
                 stroke={color}
-                strokeWidth={isHovered ? 2.5 : 1.2}
+                strokeWidth={isHovered ? 2.5 : 1.5}
                 className={isHovered ? 'flowing-line' : 'static-flow-dep'}
+                markerEnd={isHovered ? "url(#arrow-active)" : "url(#arrow)"}
                 style={{ strokeDasharray: isHovered ? '6 4' : '4 3', transition: 'stroke 0.2s, stroke-width 0.2s' }}
               />
             );
@@ -372,25 +426,25 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
                     height={nodeHeight}
                     rx="6"
                     ry="6"
-                    fill="rgba(18, 18, 20, 0.8)"
-                    stroke={isHovered ? meta.color : 'var(--border-color)'}
+                    fill="rgba(18, 18, 20, 0.85)"
+                    stroke={isHovered ? meta.color : meta.border}
                     strokeWidth={isHovered ? 1.5 : 1}
                   />
                   <rect width="3.5" height={nodeHeight - 8} rx="1" x="4" y="4" fill={meta.color} />
-                  <text x="12" y="18" fill={isHovered ? meta.color : 'var(--text-main)'} fontSize="9" fontWeight="600" fontFamily="var(--font-mono)">
+                  <text x="12" y="18" fill={isHovered ? meta.color : 'rgba(255, 255, 255, 0.9)'} fontSize="9" fontWeight="600" fontFamily="var(--font-mono)">
                     {pre.code}
                   </text>
-                  <text x="12" y="30" fill="var(--text-muted)" fontSize="8" fontWeight="400">
+                  <text x="12" y="30" fill="rgba(255, 255, 255, 0.6)" fontSize="8" fontWeight="400">
                     {pre.name.length > 20 ? pre.name.slice(0, 18) + '..' : pre.name}
                   </text>
-                  <text x={nodeWidth - 32} y="16" fill="rgba(251, 146, 60, 0.7)" fontSize="7" fontWeight="600" fontFamily="var(--font-mono)">PREREQ</text>
+                  <text x={nodeWidth - 32} y="16" fill="rgba(251, 146, 60, 0.8)" fontSize="7" fontWeight="600" fontFamily="var(--font-mono)">PREREQ</text>
                 </g>
               );
             })
           ) : (
             /* Introductory foundation placeholder */
             <g transform="translate(40, 110)">
-              <rect width={nodeWidth} height={50} rx="8" ry="8" fill="rgba(255, 255, 255, 0.01)" stroke="rgba(255, 255, 255, 0.05)" strokeDasharray="3 3" />
+              <rect width={nodeWidth} height={50} rx="8" ry="8" fill="rgba(255, 255, 255, 0.01)" stroke="rgba(255, 255, 255, 0.08)" strokeDasharray="3 3" />
               <text x={nodeWidth / 2} y="22" textAnchor="middle" fill="var(--text-dimmed)" fontSize="9" fontWeight="600">🌅 Introductory</text>
               <text x={nodeWidth / 2} y="34" textAnchor="middle" fill="rgba(255, 255, 255, 0.2)" fontSize="8">No Prerequisites</text>
             </g>
@@ -403,7 +457,7 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
               height={coreHeight}
               rx="8"
               ry="8"
-              fill="rgba(22, 22, 26, 0.85)"
+              fill="rgba(22, 22, 26, 0.9)"
               stroke="var(--accent-color)"
               strokeWidth="2"
               style={{ filter: 'drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.2))' }}
@@ -412,10 +466,10 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
             <text x="16" y="20" fill="var(--accent-color)" fontSize="11" fontWeight="700" fontFamily="var(--font-mono)">
               {activeCourse.code}
             </text>
-            <text x="16" y="32" fill="var(--text-main)" fontSize="9.5" fontWeight="600">
+            <text x="16" y="32" fill="rgba(255, 255, 255, 0.95)" fontSize="9.5" fontWeight="600">
               {activeCourse.name.length > 22 ? activeCourse.name.slice(0, 20) + '..' : activeCourse.name}
             </text>
-            <text x="16" y="44" fill="var(--text-muted)" fontSize="8" fontFamily="var(--font-mono)">
+            <text x="16" y="44" fill="rgba(255, 255, 255, 0.5)" fontSize="8" fontFamily="var(--font-mono)">
               {activeCourse.units} Units · Yr{activeCourse.year} Sem{activeCourse.semester}
             </text>
           </g>
@@ -440,25 +494,25 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
                     height={nodeHeight}
                     rx="6"
                     ry="6"
-                    fill="rgba(18, 18, 20, 0.8)"
-                    stroke={isHovered ? meta.color : 'var(--border-color)'}
+                    fill="rgba(18, 18, 20, 0.85)"
+                    stroke={isHovered ? meta.color : meta.border}
                     strokeWidth={isHovered ? 1.5 : 1}
                   />
                   <rect width="3.5" height={nodeHeight - 8} rx="1" x="4" y="4" fill={meta.color} />
-                  <text x="12" y="18" fill={isHovered ? meta.color : 'var(--text-main)'} fontSize="9" fontWeight="600" fontFamily="var(--font-mono)">
+                  <text x="12" y="18" fill={isHovered ? meta.color : 'rgba(255, 255, 255, 0.9)'} fontSize="9" fontWeight="600" fontFamily="var(--font-mono)">
                     {dep.code}
                   </text>
-                  <text x="12" y="30" fill="var(--text-muted)" fontSize="8" fontWeight="400">
+                  <text x="12" y="30" fill="rgba(255, 255, 255, 0.6)" fontSize="8" fontWeight="400">
                     {dep.name.length > 20 ? dep.name.slice(0, 18) + '..' : dep.name}
                   </text>
-                  <text x={nodeWidth - 36} y="16" fill="rgba(96, 165, 250, 0.7)" fontSize="7" fontWeight="600" fontFamily="var(--font-mono)">UNLOCKS</text>
+                  <text x={nodeWidth - 36} y="16" fill="rgba(96, 165, 250, 0.8)" fontSize="7" fontWeight="600" fontFamily="var(--font-mono)">UNLOCKS</text>
                 </g>
               );
             })
           ) : (
             /* Terminal course placeholder */
             <g transform="translate(560, 110)">
-              <rect width={nodeWidth} height={50} rx="8" ry="8" fill="rgba(255, 255, 255, 0.01)" stroke="rgba(255, 255, 255, 0.05)" strokeDasharray="3 3" />
+              <rect width={nodeWidth} height={50} rx="8" ry="8" fill="rgba(255, 255, 255, 0.01)" stroke="rgba(255, 255, 255, 0.08)" strokeDasharray="3 3" />
               <text x={nodeWidth / 2} y="22" textAnchor="middle" fill="var(--text-dimmed)" fontSize="9" fontWeight="600">🏆 Terminal Node</text>
               <text x={nodeWidth / 2} y="34" textAnchor="middle" fill="rgba(255, 255, 255, 0.2)" fontSize="8">Final Pathway Subject</text>
             </g>
