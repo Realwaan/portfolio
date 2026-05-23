@@ -99,7 +99,8 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
 
   // Reset zoom & pan on course selection change
   React.useEffect(() => {
-    setZoom(1);
+    const isOverview = !selectedCourseCode || selectedCourseCode.toUpperCase() === 'OVERVIEW';
+    setZoom(isOverview ? 1.45 : 1.25);
     setPanOffset({ x: 0, y: 0 });
     setIsDragging(false);
   }, [selectedCourseCode]);
@@ -112,7 +113,7 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
     const handleWheelEvent = (e: WheelEvent) => {
       e.preventDefault();
       const scaleChange = e.deltaY < 0 ? 0.08 : -0.08;
-      setZoom(z => Math.max(0.5, Math.min(2.5, z + scaleChange)));
+      setZoom(z => Math.max(0.6, Math.min(3.0, z + scaleChange)));
     };
 
     svgEl.addEventListener('wheel', handleWheelEvent, { passive: false });
@@ -254,8 +255,8 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
         </defs>
 
         <g 
-          transform={`translate(${panOffset.x}, ${panOffset.y}) scale(${zoom})`} 
-          style={{ transformOrigin: '0 0', transition: isDragging ? 'none' : 'transform 0.15s ease' }}
+          transform={`translate(${panOffset.x}, ${panOffset.y}) translate(415, 160) scale(${zoom}) translate(-415, -160)`} 
+          style={{ transition: isDragging ? 'none' : 'transform 0.15s ease' }}
         >
           {/* Draw connectors first so they render underneath the node cards */}
           <g className="connections-layer">
@@ -433,8 +434,8 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
         </defs>
 
         <g 
-          transform={`translate(${panOffset.x}, ${panOffset.y}) scale(${zoom})`} 
-          style={{ transformOrigin: '0 0', transition: isDragging ? 'none' : 'transform 0.15s ease' }}
+          transform={`translate(${panOffset.x}, ${panOffset.y}) translate(415, 160) scale(${zoom}) translate(-415, -160)`} 
+          style={{ transition: isDragging ? 'none' : 'transform 0.15s ease' }}
         >
           {/* Connection paths */}
           <g className="connections-layer">
@@ -692,7 +693,7 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
               <div className="mindmap-zoom-controls" onMouseDown={(e) => e.stopPropagation()}>
                 <button 
                   className="zoom-btn" 
-                  onClick={(e) => { e.stopPropagation(); setZoom(z => Math.min(2.5, z + 0.15)); }}
+                  onClick={(e) => { e.stopPropagation(); setZoom(z => Math.min(3.0, z + 0.15)); }}
                   onMouseDown={(e) => e.stopPropagation()}
                   title="Zoom In"
                 >
@@ -700,7 +701,7 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
                 </button>
                 <button 
                   className="zoom-btn" 
-                  onClick={(e) => { e.stopPropagation(); setZoom(z => Math.max(0.5, z - 0.15)); }}
+                  onClick={(e) => { e.stopPropagation(); setZoom(z => Math.max(0.6, z - 0.15)); }}
                   onMouseDown={(e) => e.stopPropagation()}
                   title="Zoom Out"
                 >
@@ -708,7 +709,12 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
                 </button>
                 <button 
                   className="zoom-btn" 
-                  onClick={(e) => { e.stopPropagation(); setZoom(1); setPanOffset({ x: 0, y: 0 }); }}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    const isOverview = !selectedCourseCode || selectedCourseCode.toUpperCase() === 'OVERVIEW';
+                    setZoom(isOverview ? 1.45 : 1.25); 
+                    setPanOffset({ x: 0, y: 0 }); 
+                  }}
                   onMouseDown={(e) => e.stopPropagation()}
                   title="Reset View"
                 >
