@@ -255,7 +255,7 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
 
         <g 
           transform={`translate(${panOffset.x}, ${panOffset.y}) scale(${zoom})`} 
-          style={{ transformOrigin: 'center', transition: isDragging ? 'none' : 'transform 0.15s ease' }}
+          style={{ transformOrigin: '0 0', transition: isDragging ? 'none' : 'transform 0.15s ease' }}
         >
           {/* Draw connectors first so they render underneath the node cards */}
           <g className="connections-layer">
@@ -434,7 +434,7 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
 
         <g 
           transform={`translate(${panOffset.x}, ${panOffset.y}) scale(${zoom})`} 
-          style={{ transformOrigin: 'center', transition: isDragging ? 'none' : 'transform 0.15s ease' }}
+          style={{ transformOrigin: '0 0', transition: isDragging ? 'none' : 'transform 0.15s ease' }}
         >
           {/* Connection paths */}
           <g className="connections-layer">
@@ -656,7 +656,7 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
       {/* SUBJECT MIND MAP TAB (RE-ENGINEERED) */}
       {/* ==================================================== */}
       {activeTab === 'mindmap' && (
-        <div className="roadmap-tab-content scrollable-area" style={{ padding: '8px' }}>
+        <div className="roadmap-tab-content" style={{ padding: '8px' }}>
           <div className="mindmap-canvas-card glass-panel" style={{ padding: 12, overflow: 'hidden' }}>
             <div className="mindmap-header-bar">
               <span className="mindmap-canvas-title font-mono" style={{ color: 'var(--text-main)', fontSize: '11px', fontWeight: 600 }}>

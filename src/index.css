@@ -3229,6 +3229,8 @@ kbd {
   flex-direction: column;
   gap: 12px;
   width: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 .mindmap-header-bar {
@@ -3254,11 +3256,16 @@ kbd {
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .mindmap-svg-canvas {
   width: 100%;
-  height: 270px;
+  flex: 1;
+  min-height: 0;
 }
 
 /* Floating Zoom Controls */
