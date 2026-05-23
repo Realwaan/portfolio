@@ -1,73 +1,89 @@
-# React + TypeScript + Vite
+# 🖥️ CIT-U Portfolio Explorer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> A Raycast-style command palette portfolio — built with React + TypeScript + Vite
 
-Currently, two official plugins are available:
+**Live at:** [github.com/Realwaan/portfolio](https://github.com/Realwaan/portfolio)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## ✨ Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Feature | Description |
+|---|---|
+| 🔍 **Command Palette UI** | Raycast-inspired keyboard-navigable search interface |
+| 📚 **BSCS Curriculum Roadmap** | Interactive CIT-U 2023-2024 curriculum with Mind Map & Summation tabs |
+| 💻 **Project Showcases** | Live GitHub repos with glassmorphic interactive widgets per project |
+| 🎵 **Spotify Mini-Player** | Floating player with favorite NIKI tracks (Premium-ready embed) |
+| 🎨 **3 Accent Themes** | Raycast Crimson Red · CIT-U Gold · CIT-U Maroon |
+| 📱 **Fully Responsive** | Mobile-first, works on all iOS/Android screen sizes |
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🏫 About
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+**Marc Andrei Regulacion**  
+First-Year BS Computer Science Student  
+Cebu Institute of Technology – University (CIT-U)  
+College of Computer Studies · Curriculum Year 2023-2024
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 🛠️ Tech Stack
+
+- **React 18** + **TypeScript** — Component architecture
+- **Vite 8** — Lightning-fast bundler
+- **Vanilla CSS** — Custom design system (glassmorphism, dark mode)
+- **Lucide React** — Icon system
+- **GitHub REST API** — Live repository fetching
+- **Spotify Embed API** — Full Premium playback
+
+---
+
+## 🚀 Getting Started
+
+```bash
+git clone https://github.com/Realwaan/portfolio.git
+cd portfolio
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open [http://localhost:5173](http://localhost:5173)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## ⌨️ Keyboard Shortcuts
+
+| Key | Action |
+|---|---|
+| `↑` / `↓` | Navigate items |
+| `↵` | Open / Select |
+| `Tab` | Open theme switcher |
+| `Esc` | Close modals / clear search |
+| Any key | Focus search bar |
+
+---
+
+## 📦 Project Structure
+
 ```
+src/
+├── components/
+│   ├── CommandList.tsx      # Left sidebar with collapsible categories
+│   ├── DetailPanel.tsx      # Right detail pane with interactive widgets
+│   ├── CurriculumRoadmap.tsx# BSCS Mind Map + Timeline + Summation
+│   ├── SpotifyPlayer.tsx    # Floating Spotify mini-player
+│   ├── ActionPanel.tsx      # Footer keyboard guide
+│   └── Toast.tsx            # Micro-toast notification system
+├── data/
+│   ├── curriculumData.ts    # Full CIT-U BSCS 2023-2024 curriculum
+│   └── fallbackData.ts      # Profile + static project data
+└── hooks/
+    └── useGithubRepos.ts    # GitHub API fetcher with localStorage cache
+```
+
+---
+
+<p align="center">
+  Built with 💙 at <strong>CIT-U</strong> · Go Wildcats! 🐱
+</p>
