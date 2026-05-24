@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import * as Icons from 'lucide-react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -17,6 +17,10 @@ interface CommandListProps {
   selectedIndex: number;
   onItemClick: (item: ListItem) => void;
   onHoverItem: (index: number) => void;
+  expandedSections: Record<string, boolean>;
+  onToggleSection: (category: string) => void;
+  sectionCounts: Record<string, number>;
+  isSearching: boolean;
 }
 
 // Dynamic icon mapper component
@@ -32,10 +36,12 @@ export const CommandList: React.FC<CommandListProps> = ({
   items,
   selectedIndex,
   onItemClick,
-  onHoverItem
+  onHoverItem,
+  expandedSections,
+  onToggleSection,
+  sectionCounts,
+  isSearching
 }) => {
-  const [academicsExpanded, setAcademicsExpanded] = useState(false);
-
   // Group items by category to display them in sections
   const categories: { [key: string]: ListItem[] } = {
     'Welcome Profile': [],
@@ -62,45 +68,56 @@ export const CommandList: React.FC<CommandListProps> = ({
     }
   });
 
-  // We need to know the global flat index of each item when rendering grouped items,
-  // so keyboard navigation matching `selectedIndex` highlights the correct list node.
-  let globalFlatIndex = 0;
-
   return (
     <div className="list-pane">
       {Object.entries(categories).map(([categoryTitle, categoryItems]) => {
-        if (categoryItems.length === 0) return null;
+        // Find the category key (e.g. 'welcome', 'project', etc.)
+        const categoryKey = Object.keys(categoryMap).find(key => categoryMap[key] === categoryTitle);
+        if (!categoryKey) return null;
 
-        const isAcademics = categoryTitle === 'Academic Modules (CIT-U)';
+        const isCollapsible = categoryKey !== 'welcome';
+        const isExpanded = isCollapsible ? expandedSections[categoryKey] : true;
+        const totalCount = sectionCounts[categoryKey] || 0;
 
-        // For academics: overview item is always shown; rest are in the collapsible group
-        const overviewItem = isAcademics ? categoryItems.find(i => i.id === 'course-overview') : null;
-        const restItems = isAcademics ? categoryItems.filter(i => i.id !== 'course-overview') : [];
-        const visibleItems = isAcademics
-          ? (overviewItem ? [overviewItem, ...(academicsExpanded ? restItems : [])] : categoryItems)
-          : categoryItems;
+        // If there are no items in this category AND (we are searching OR there are no items in the category overall), do not render the category.
+        if (categoryItems.length === 0 && (isSearching || totalCount === 0)) {
+          return null;
+        }
 
         return (
           <div key={categoryTitle} className="list-category">
-            <h3 className="category-title">{categoryTitle}</h3>
-            {visibleItems.map((item) => {
-              const currentFlatIndex = globalFlatIndex;
-              globalFlatIndex++;
-
-              const isSelected = currentFlatIndex === selectedIndex;
+            <h3 
+              className={`category-title ${isSearching || !isCollapsible ? 'static-header' : ''}`}
+              onClick={isSearching || !isCollapsible ? undefined : () => onToggleSection(categoryKey)}
+            >
+              <span className="category-title-left">
+                {!isSearching && isCollapsible && (
+                  isExpanded ? <ChevronUp size={11} className="category-chevron" /> : <ChevronDown size={11} className="category-chevron" />
+                )}
+                <span>{categoryTitle}</span>
+              </span>
+              {totalCount > 0 && isCollapsible && (
+                <span className="category-title-count">
+                  {totalCount}
+                </span>
+              )}
+            </h3>
+            {categoryItems.map((item) => {
+              const itemIdx = items.indexOf(item);
+              const isSelected = itemIdx === selectedIndex;
 
               return (
                 <div
                   key={item.id}
                   className={`list-item ${isSelected ? 'selected' : ''}`}
                   onClick={() => onItemClick(item)}
-                  onMouseEnter={() => onHoverItem(currentFlatIndex)}
+                  onMouseEnter={() => onHoverItem(itemIdx)}
                 >
                   <div 
                     className="item-icon-container" 
-                    style={item.category === 'welcome' ? { borderRadius: '50%', overflow: 'hidden', padding: 0 } : {}}
+                    style={item.id === 'welcome-card' ? { borderRadius: '50%', overflow: 'hidden', padding: 0 } : {}}
                   >
-                    {item.category === 'welcome' && item.rawItem.avatarUrl ? (
+                    {item.id === 'welcome-card' && item.rawItem.avatarUrl ? (
                       <img 
                         src={item.rawItem.avatarUrl} 
                         alt="Profile Avatar" 
@@ -113,8 +130,8 @@ export const CommandList: React.FC<CommandListProps> = ({
                       />
                     ) : null}
                     <div 
-                      id={item.category === 'welcome' ? `fallback-${item.id}` : undefined}
-                      style={item.category === 'welcome' ? { display: 'none', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' } : { display: 'contents' }}
+                      id={item.id === 'welcome-card' ? `fallback-${item.id}` : undefined}
+                      style={item.id === 'welcome-card' ? { display: 'none', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' } : { display: 'contents' }}
                     >
                       <IconRenderer name={item.iconName} size={15} />
                     </div>
@@ -134,26 +151,6 @@ export const CommandList: React.FC<CommandListProps> = ({
                 </div>
               );
             })}
-
-            {/* Collapsible toggle for academics */}
-            {isAcademics && restItems.length > 0 && (
-              <button
-                className="academics-toggle-btn"
-                onClick={() => setAcademicsExpanded(prev => !prev)}
-              >
-                {academicsExpanded ? (
-                  <>
-                    <ChevronUp size={11} />
-                    <span>Collapse courses</span>
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown size={11} />
-                    <span>Show all {restItems.length} courses</span>
-                  </>
-                )}
-              </button>
-            )}
           </div>
         );
       })}

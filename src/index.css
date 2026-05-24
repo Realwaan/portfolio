@@ -234,37 +234,45 @@ body,
   text-transform: uppercase;
   letter-spacing: 0.8px;
   padding: 6px 12px;
-}
-
-/* Academics Collapsible Toggle Button */
-.academics-toggle-btn {
   display: flex;
   align-items: center;
-  gap: 5px;
-  width: 100%;
-  padding: 6px 12px;
-  background: transparent;
-  border: none;
-  border-top: 1px dashed rgba(255, 255, 255, 0.06);
-  color: var(--text-dimmed);
-  font-size: 11px;
-  font-family: var(--font-sans);
-  font-weight: 500;
+  justify-content: space-between;
   cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
-  margin-top: 2px;
-  border-radius: 0 0 6px 6px;
-  letter-spacing: 0.2px;
+  user-select: none;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  border-radius: 4px;
 }
 
-.academics-toggle-btn:hover {
+.category-title.static-header {
+  cursor: default;
+}
+
+.category-title:not(.static-header):hover {
   color: var(--accent-color);
-  background: rgba(var(--accent-rgb), 0.04);
+  background-color: rgba(var(--accent-rgb), 0.04);
 }
 
-.academics-toggle-btn svg {
+.category-title-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.category-chevron {
   flex-shrink: 0;
   opacity: 0.7;
+}
+
+.category-title-count {
+  font-size: 9px;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 
@@ -481,6 +489,80 @@ body,
   color: var(--accent-color);
   border: 1px solid rgba(var(--accent-rgb), 0.15);
   border-radius: 4px;
+}
+
+/* Skill Reference Notes */
+.skill-notes-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.skill-note-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 12px;
+  border-left: 2px solid var(--border-color);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.78);
+  transition: border-color 0.2s ease, background 0.15s ease;
+}
+
+.skill-note-item:hover {
+  border-left-color: var(--accent-color);
+  background: rgba(var(--accent-rgb), 0.03);
+}
+
+.skill-note-bullet {
+  color: var(--accent-color);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.4;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.skill-note-text {
+  flex: 1;
+  font-family: var(--font-sans);
+}
+
+.skill-doc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  margin-bottom: 16px;
+  background: rgba(var(--accent-rgb), 0.06);
+  border: 1px solid rgba(var(--accent-rgb), 0.18);
+  border-radius: 6px;
+  color: var(--accent-color);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.skill-doc-link:hover {
+  background: rgba(var(--accent-rgb), 0.12);
+  border-color: rgba(var(--accent-rgb), 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.15);
+}
+
+.skill-doc-link svg {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.skill-level-dot {
+  box-shadow: 0 0 6px currentColor;
 }
 
 /* Code Preview Block */
@@ -714,6 +796,24 @@ kbd {
   animation: toastIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   font-size: 12.5px;
   color: var(--text-main);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toast.exiting {
+  animation: toastOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes toastOut {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    filter: blur(0px);
+  }
+  to {
+    transform: translateY(-12px) scale(0.95);
+    opacity: 0;
+    filter: blur(4px);
+  }
 }
 
 .toast-success-icon {
@@ -2031,7 +2131,7 @@ kbd {
   height: 100%;
   color: var(--text-main);
   background-color: rgba(0, 0, 0, 0.12);
-  padding: 20px 24px;
+  padding: 12px 16px;
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -2041,11 +2141,12 @@ kbd {
   flex-direction: row;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 16px;
+  gap: 10px;
   border-bottom: 1px solid var(--border-color);
-  padding-bottom: 12px;
-  margin-bottom: 16px;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .roadmap-badge-cit {
@@ -2119,6 +2220,7 @@ kbd {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
 }
 
 .scrollable-area {
@@ -3075,23 +3177,32 @@ kbd {
   border: 1px solid var(--border-color);
   border-radius: 12px;
   box-shadow: var(--shadow-main), var(--shadow-glow);
-  padding: 0 0 0 16px;
+  padding: 0;
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 16px;
-  height: 80px;
+  flex-direction: column;
+  align-items: stretch;
   flex-shrink: 0;
   z-index: 10;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .spotify-player-inline:focus-within,
 .spotify-player-inline:hover {
   border-color: rgba(var(--accent-rgb), 0.25);
   box-shadow: var(--shadow-main), 0 0 0 1px rgba(var(--accent-rgb), 0.1), var(--shadow-glow);
+}
+
+.spotify-player-main-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  height: 80px;
+  padding-left: 16px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 /* Controls Strip Styles */
@@ -3160,7 +3271,7 @@ kbd {
   background: rgba(255, 255, 255, 0.08);
 }
 
-.spotify-select-wrapper {
+.spotify-select-custom-wrapper {
   position: relative;
   display: flex;
   align-items: center;
@@ -3168,7 +3279,7 @@ kbd {
   min-width: 0;
 }
 
-.spotify-track-select {
+.spotify-track-select-trigger {
   width: 100%;
   background: transparent;
   border: none;
@@ -3177,29 +3288,109 @@ kbd {
   font-weight: 600;
   cursor: pointer;
   outline: none;
-  padding: 2px 14px 2px 2px;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
+  padding: 4px 14px 4px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  transition: color 0.3s ease, background-color 0.15s ease;
+  border-radius: 4px;
+}
+
+.spotify-track-select-trigger:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.spotify-select-trigger-text {
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
-  transition: color 0.3s ease;
+  flex: 1;
+  text-align: left;
 }
 
-.spotify-select-wrapper::after {
-  content: '▼';
+.spotify-select-trigger-arrow {
   font-size: 7px;
   color: var(--text-dimmed);
-  position: absolute;
-  right: 2px;
-  pointer-events: none;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
 }
 
-.spotify-track-select option {
-  background-color: var(--bg-app);
+.spotify-track-select-trigger[aria-expanded="true"] .spotify-select-trigger-arrow {
+  transform: rotate(180deg);
+}
+
+/* Floating Dropdown List - positioned above the player */
+.spotify-select-dropdown-list {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  width: 220px;
+  background-color: rgba(18, 18, 20, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 999;
+  animation: dropdownFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.spotify-select-dropdown-item {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  gap: 1px;
+  box-sizing: border-box;
+}
+
+.spotify-select-dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.spotify-select-dropdown-item.active {
+  font-weight: 600;
+}
+
+.spotify-dropdown-item-title {
+  font-size: 11.5px;
   color: var(--text-main);
-  font-family: var(--font-sans);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.spotify-dropdown-item-artist {
+  font-size: 9px;
+  color: var(--text-dimmed);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.spotify-select-dropdown-item:hover .spotify-dropdown-item-artist {
+  color: var(--text-muted);
 }
 
 /* Embed Container */
@@ -3221,6 +3412,173 @@ kbd {
   to   { transform: rotate(360deg); }
 }
 
+/* Lyrics Toggle Button styling */
+.spotify-lyrics-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.spotify-lyrics-toggle-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.spotify-lyrics-toggle-btn.active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.lyrics-toggle-label {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* Expandable Lyrics Panel */
+.spotify-lyrics-panel {
+  border-top: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  animation: slide-down 0.2s ease-out;
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 250px;
+  }
+}
+
+/* Lyrics Controls Bar */
+.spotify-lyrics-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px dashed var(--border-color);
+  background: rgba(255, 255, 255, 0.01);
+  box-sizing: border-box;
+  gap: 12px;
+}
+
+.lyrics-time-display {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.lyrics-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lyrics-ctrl-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.lyrics-ctrl-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.lyrics-ctrl-btn svg {
+  flex-shrink: 0;
+}
+
+.lyrics-ctrl-btn.play-btn {
+  font-weight: 600;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.lyrics-ctrl-btn.play-btn.active {
+  border-color: var(--accent-color);
+}
+
+.lyrics-sync-hint {
+  font-size: 9px;
+  color: var(--text-dimmed);
+  font-style: italic;
+}
+
+/* Lyrics Viewport */
+.spotify-lyrics-viewport {
+  position: relative;
+  max-height: 120px;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scroll-behavior: smooth;
+  box-sizing: border-box;
+}
+
+.lyrics-empty {
+  font-size: 11px;
+  color: var(--text-dimmed);
+  text-align: center;
+  padding: 16px 0;
+}
+
+.lyrics-line-item {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-dimmed);
+  opacity: 0.5;
+  transition: all 0.25s ease;
+  cursor: pointer;
+  user-select: none;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.lyrics-line-item:hover {
+  opacity: 0.9;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.lyrics-line-item.active {
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 1;
+  transform: scale(1.02);
+  transform-origin: left center;
+}
+
+.lyrics-line-item.past {
+  opacity: 0.3;
+}
+
 /* ====================================================
    Interactive SVG Mind Map Dashboard
    ==================================================== */
@@ -3238,8 +3596,9 @@ kbd {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border-color);
-  padding-bottom: 8px;
+  padding-bottom: 6px;
   margin-bottom: 4px;
+  flex-shrink: 0;
 }
 
 .mindmap-reset-btn:hover {
@@ -3264,8 +3623,10 @@ kbd {
 
 .mindmap-svg-canvas {
   width: 100%;
+  height: 100%;
   flex: 1;
   min-height: 0;
+  display: flex;
 }
 
 /* Floating Zoom Controls */
@@ -3311,15 +3672,19 @@ kbd {
 
 .mindmap-svg {
   display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
 .mindmap-legend-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding-top: 8px;
+  padding-top: 6px;
   border-top: 1px dashed var(--border-color);
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .legend-title {
@@ -3437,9 +3802,15 @@ kbd {
 
 @media (max-width: 550px) {
   .spotify-player-inline {
-    padding: 0 0 0 8px;
+    padding: 0;
+    height: auto;
+  }
+
+  .spotify-player-main-row {
+    padding-left: 8px;
     gap: 8px;
     height: 80px;
+    width: 100%;
   }
 
   .spotify-controls-strip {
@@ -3459,4 +3830,492 @@ kbd {
     font-size: 10.5px;
     max-width: 75px;
   }
+}
+
+/* Custom Filter Dropdowns Styling (used in Curriculum Roadmap) */
+.custom-filter-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.custom-filter-dropdown-trigger {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 140px;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.custom-filter-dropdown-trigger.small {
+  min-width: 120px;
+  padding: 4px 10px;
+  font-size: 10px;
+}
+
+.custom-filter-dropdown-trigger:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.custom-filter-dropdown-trigger[aria-expanded="true"] {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.15);
+}
+
+.custom-filter-trigger-text {
+  flex: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.custom-filter-trigger-arrow {
+  font-size: 8px;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.custom-filter-dropdown-trigger[aria-expanded="true"] .custom-filter-trigger-arrow {
+  transform: rotate(180deg);
+}
+
+.custom-filter-dropdown-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 100%;
+  min-width: 160px;
+  background-color: rgba(18, 18, 20, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 1000;
+  animation: filterDropdownFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+@keyframes filterDropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.custom-filter-dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--text-muted);
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+  text-align: left;
+  user-select: none;
+}
+
+.custom-filter-dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+}
+
+.custom-filter-dropdown-item.active {
+  background-color: rgba(var(--accent-rgb), 0.12);
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+/* Skeleton Loading Styles */
+@keyframes notion-pulse {
+  0%, 100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.notion-skeleton-pulse .notion-skeleton-bar {
+  animation: notion-pulse 1.8s ease-in-out infinite;
+}
+
+.notion-skeleton-bar {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+}
+
+/* ====================================================
+   Notion-Style Course Notes View
+   ==================================================== */
+.course-notes-cover {
+  height: 90px;
+  margin: -24px -24px 0 -24px;
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.15) 0%, rgba(var(--accent-rgb), 0.05) 50%, rgba(0, 0, 0, 0) 100%);
+  border-bottom: 1px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+}
+
+.course-notes-cover::after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  left: -15px;
+  width: 70px;
+  height: 70px;
+  background: radial-gradient(circle, rgba(var(--accent-rgb), 0.18) 0%, transparent 80%);
+  filter: blur(8px);
+}
+
+.course-notes-emoji {
+  font-size: 38px;
+  margin-top: -30px;
+  margin-bottom: 12px;
+  display: inline-block;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+  z-index: 5;
+  position: relative;
+  user-select: none;
+}
+
+.notion-properties-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.notion-property-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  align-items: center;
+  font-size: 12px;
+}
+
+.notion-property-label {
+  color: var(--text-dimmed);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.notion-property-value {
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Badge styling */
+.notion-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.notion-badge.status-completed {
+  background-color: rgba(16, 185, 129, 0.08);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.22);
+}
+
+.notion-badge.status-in-progress {
+  background-color: rgba(245, 158, 11, 0.08);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.22);
+}
+
+.notion-badge.status-upcoming {
+  background-color: rgba(255, 255, 255, 0.03);
+  color: var(--text-muted);
+  border-color: var(--border-color);
+}
+
+.notion-badge.diff-easy {
+  background-color: rgba(16, 185, 129, 0.06);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.15);
+}
+
+.notion-badge.diff-medium {
+  background-color: rgba(var(--accent-rgb), 0.06);
+  color: var(--accent-color);
+  border-color: rgba(var(--accent-rgb), 0.15);
+}
+
+.notion-badge.diff-hard {
+  background-color: rgba(239, 68, 68, 0.06);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.15);
+}
+
+/* Prerequisite tags styling */
+.notion-link-badge {
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-muted);
+  padding: 1px 6px;
+  font-size: 10.5px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.notion-link-badge:hover {
+  background-color: rgba(var(--accent-rgb), 0.1);
+  border-color: rgba(var(--accent-rgb), 0.35);
+  color: var(--accent-color);
+  transform: translateY(-0.5px);
+}
+
+.notion-link-badge-none {
+  color: var(--text-dimmed);
+  font-style: italic;
+  font-size: 11px;
+}
+
+/* Syllabus Checklist */
+.notion-checklist-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dimmed);
+  margin-top: 16px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: 1px dashed var(--border-color);
+  padding-bottom: 4px;
+}
+
+.notion-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.notion-checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 2px 0;
+  transition: color 0.15s ease;
+}
+
+.notion-checklist-item:hover {
+  color: var(--text-main);
+}
+
+.notion-checkbox {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1.5px solid var(--border-color);
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.notion-checklist-item:hover .notion-checkbox {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.notion-checkbox.checked {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.notion-checkbox-check {
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.notion-checklist-text {
+  transition: all 0.15s ease;
+  line-height: 1.4;
+}
+
+.notion-checklist-text.checked {
+  text-decoration: line-through;
+  color: var(--text-dimmed);
+  opacity: 0.65;
+}
+
+/* Callout Box */
+.notion-callout {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--accent-color);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin: 14px 0;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  box-sizing: border-box;
+}
+
+.notion-callout-icon {
+  font-size: 16px;
+  line-height: 1.2;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.notion-callout-content {
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.notion-callout-content strong {
+  color: var(--text-main);
+}
+
+/* Math Formulas */
+.notion-formula-block {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 14px;
+  margin: 14px 0;
+  background-color: rgba(255, 255, 255, 0.015);
+  border: 1px dashed var(--border-color);
+  border-radius: 6px;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 15px;
+  font-style: italic;
+  color: var(--text-main);
+  text-align: center;
+  letter-spacing: 0.5px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* Code Header & Blocks */
+.notion-code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #0c0c0e;
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  padding: 5px 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dimmed);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 14px;
+  box-sizing: border-box;
+}
+
+.notion-code-copy-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dimmed);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  transition: color 0.15s ease;
+  outline: none;
+  padding: 0;
+}
+
+.notion-code-copy-btn:hover {
+  color: var(--text-main);
+}
+
+.notion-code-block {
+  margin-top: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+  background-color: #050506;
+}
+
+/* Notes Footer Action Link */
+.notion-notes-footer {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+  box-sizing: border-box;
+}
+
+.notion-notes-map-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(var(--accent-rgb), 0.08);
+  border: 1px solid rgba(var(--accent-rgb), 0.22);
+  border-radius: 6px;
+  color: var(--accent-color);
+  padding: 6px 14px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.notion-notes-map-btn:hover {
+  background: rgba(var(--accent-rgb), 0.14);
+  border-color: rgba(var(--accent-rgb), 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.15);
 }

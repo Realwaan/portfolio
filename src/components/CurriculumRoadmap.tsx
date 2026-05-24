@@ -71,6 +71,25 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
   const [electiveGroupFilter, setElectiveGroupFilter] = useState<string | 'all'>('all');
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
+  // Custom Filter Dropdowns states and refs
+  const [isStreamDropdownOpen, setIsStreamDropdownOpen] = useState(false);
+  const [isElectiveDropdownOpen, setIsElectiveDropdownOpen] = useState(false);
+  const streamDropdownRef = React.useRef<HTMLDivElement>(null);
+  const electiveDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (streamDropdownRef.current && !streamDropdownRef.current.contains(e.target as Node)) {
+        setIsStreamDropdownOpen(false);
+      }
+      if (electiveDropdownRef.current && !electiveDropdownRef.current.contains(e.target as Node)) {
+        setIsElectiveDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // Zoom/Pan States for Mind Map
   const [zoom, setZoom] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
@@ -100,7 +119,7 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
   // Reset zoom & pan on course selection change
   React.useEffect(() => {
     const isOverview = !selectedCourseCode || selectedCourseCode.toUpperCase() === 'OVERVIEW';
-    setZoom(isOverview ? 1.45 : 1.25);
+    setZoom(isOverview ? 1.65 : 1.45);
     setPanOffset({ x: 0, y: 0 });
     setIsDragging(false);
   }, [selectedCourseCode]);
@@ -657,8 +676,8 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
       {/* SUBJECT MIND MAP TAB (RE-ENGINEERED) */}
       {/* ==================================================== */}
       {activeTab === 'mindmap' && (
-        <div className="roadmap-tab-content" style={{ padding: '8px' }}>
-          <div className="mindmap-canvas-card glass-panel" style={{ padding: 12, overflow: 'hidden' }}>
+        <div className="roadmap-tab-content" style={{ padding: '4px' }}>
+          <div className="mindmap-canvas-card glass-panel" style={{ padding: 8, overflow: 'hidden', margin: '4px 0 6px 0', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <div className="mindmap-header-bar">
               <span className="mindmap-canvas-title font-mono" style={{ color: 'var(--text-main)', fontSize: '11px', fontWeight: 600 }}>
                 {activeCourse ? `Interactive Pathway: ${activeCourse.code}` : 'Interactive CSIT Subject Pipeline Map'}
@@ -712,7 +731,7 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
                   onClick={(e) => { 
                     e.stopPropagation(); 
                     const isOverview = !selectedCourseCode || selectedCourseCode.toUpperCase() === 'OVERVIEW';
-                    setZoom(isOverview ? 1.45 : 1.25); 
+                    setZoom(isOverview ? 1.65 : 1.45); 
                     setPanOffset({ x: 0, y: 0 }); 
                   }}
                   onMouseDown={(e) => e.stopPropagation()}
@@ -760,16 +779,63 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
 
             <div className="filter-group">
               <span className="filter-label"><BookOpen size={11} /> Stream Filter</span>
-              <select 
-                className="filter-dropdown"
-                value={streamFilter}
-                onChange={(e) => setStreamFilter(e.target.value)}
-              >
-                <option value="all">All Streams</option>
-                {Object.entries(streamMeta).map(([key, value]) => (
-                  <option key={key} value={key}>{value.name}</option>
-                ))}
-              </select>
+              <div className="custom-filter-dropdown-wrapper" ref={streamDropdownRef}>
+                <button
+                  className="custom-filter-dropdown-trigger"
+                  onClick={() => setIsStreamDropdownOpen(!isStreamDropdownOpen)}
+                  aria-haspopup="listbox"
+                  aria-expanded={isStreamDropdownOpen}
+                >
+                  <span className="custom-filter-trigger-text">
+                    {streamFilter === 'all' ? 'All Streams' : (streamMeta as any)[streamFilter]?.name || streamFilter}
+                  </span>
+                  <span className="custom-filter-trigger-arrow">▼</span>
+                </button>
+
+                {isStreamDropdownOpen && (
+                  <div className="custom-filter-dropdown-list" role="listbox">
+                    <div
+                      role="option"
+                      aria-selected={streamFilter === 'all'}
+                      className={`custom-filter-dropdown-item ${streamFilter === 'all' ? 'active' : ''}`}
+                      onClick={() => {
+                        setStreamFilter('all');
+                        setIsStreamDropdownOpen(false);
+                      }}
+                    >
+                      All Streams
+                    </div>
+                    {Object.entries(streamMeta).map(([key, value]) => {
+                      const isActive = streamFilter === key;
+                      return (
+                        <div
+                          key={key}
+                          role="option"
+                          aria-selected={isActive}
+                          className={`custom-filter-dropdown-item ${isActive ? 'active' : ''}`}
+                          onClick={() => {
+                            setStreamFilter(key);
+                            setIsStreamDropdownOpen(false);
+                          }}
+                        >
+                          <span 
+                            className="stream-dot" 
+                            style={{ 
+                              display: 'inline-block', 
+                              width: 6, 
+                              height: 6, 
+                              borderRadius: '50%', 
+                              backgroundColor: value.color,
+                              marginRight: 6
+                            }} 
+                          />
+                          {value.name}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -935,16 +1001,52 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
                 </div>
 
                 {/* Group Filter */}
-                <select 
-                  className="filter-dropdown-small"
-                  value={electiveGroupFilter}
-                  onChange={(e) => setElectiveGroupFilter(e.target.value)}
-                >
-                  <option value="all">All Electives</option>
-                  {electivesCatalog.map(g => (
-                    <option key={g.id} value={g.id}>{g.title}</option>
-                  ))}
-                </select>
+                <div className="custom-filter-dropdown-wrapper" ref={electiveDropdownRef}>
+                  <button
+                    className="custom-filter-dropdown-trigger small"
+                    onClick={() => setIsElectiveDropdownOpen(!isElectiveDropdownOpen)}
+                    aria-haspopup="listbox"
+                    aria-expanded={isElectiveDropdownOpen}
+                  >
+                    <span className="custom-filter-trigger-text">
+                      {electiveGroupFilter === 'all' ? 'All Electives' : electivesCatalog.find(g => g.id === electiveGroupFilter)?.title || electiveGroupFilter}
+                    </span>
+                    <span className="custom-filter-trigger-arrow">▼</span>
+                  </button>
+
+                  {isElectiveDropdownOpen && (
+                    <div className="custom-filter-dropdown-list" role="listbox" style={{ width: '180px' }}>
+                      <div
+                        role="option"
+                        aria-selected={electiveGroupFilter === 'all'}
+                        className={`custom-filter-dropdown-item ${electiveGroupFilter === 'all' ? 'active' : ''}`}
+                        onClick={() => {
+                          setElectiveGroupFilter('all');
+                          setIsElectiveDropdownOpen(false);
+                        }}
+                      >
+                        All Electives
+                      </div>
+                      {electivesCatalog.map(g => {
+                        const isActive = electiveGroupFilter === g.id;
+                        return (
+                          <div
+                            key={g.id}
+                            role="option"
+                            aria-selected={isActive}
+                            className={`custom-filter-dropdown-item ${isActive ? 'active' : ''}`}
+                            onClick={() => {
+                              setElectiveGroupFilter(g.id);
+                              setIsElectiveDropdownOpen(false);
+                            }}
+                          >
+                            {g.title}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

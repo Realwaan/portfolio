@@ -1,7 +1,11 @@
 import React from 'react';
-import { Star, GitFork, Calendar, Link2, Info, Copy, Check, RefreshCw, Cpu, Activity, Terminal } from 'lucide-react';
+import { Star, GitFork, Calendar, Link2, Info, Copy, Check, RefreshCw, Cpu, Activity, Terminal, ExternalLink, BookOpen, StickyNote } from 'lucide-react';
 import type { Project, Skill, AcademicCourse } from '../data/fallbackData';
 import { CurriculumRoadmap } from './CurriculumRoadmap';
+import { bscsCurriculum } from '../data/curriculumData';
+import { getCourseNotes } from '../data/courseNotesData';
+import { NotionBlockRenderer } from './NotionBlockRenderer';
+
 
 // ----------------------------------------------------
 // Sub-component: profile photo rendering helper
@@ -571,6 +575,552 @@ const SwotlibSimulator: React.FC = () => {
 
 // Description editing functionality removed - descriptions are static
 
+// ----------------------------------------------------
+// Sub-component: Notion-style Code Block with Copy
+// ----------------------------------------------------
+const NotionCodeBlock: React.FC<{ code: string; language: string }> = ({ code, language }) => {
+  const [copied, setCopied] = React.useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    window.dispatchEvent(new CustomEvent('trigger-toast', {
+      detail: { message: 'Code copied to clipboard!' }
+    }));
+  };
+
+  return (
+    <>
+      <div className="notion-code-header">
+        <span>{language}</span>
+        <button className="notion-code-copy-btn" onClick={handleCopy} aria-label="Copy code block">
+          {copied ? (
+            <>
+              <Check size={11} />
+              <span>Copied</span>
+            </>
+          ) : (
+            <>
+              <Copy size={11} />
+              <span>Copy</span>
+            </>
+          )}
+        </button>
+      </div>
+      <pre className="code-preview notion-code-block font-mono">
+        <code>{code}</code>
+      </pre>
+    </>
+  );
+};
+
+// ----------------------------------------------------
+// Sub-component: Notion-style Course Study Notes View
+// ----------------------------------------------------
+interface CourseNotesViewProps {
+  courseCode: string;
+  onSelectCourseCode?: (code: string) => void;
+}
+
+const CourseNotesView: React.FC<CourseNotesViewProps> = ({ courseCode, onSelectCourseCode }) => {
+  const courseNode = bscsCurriculum.find(
+    c => c.code.replace(/\s+/g, '').toLowerCase() === courseCode.replace(/\s+/g, '').toLowerCase()
+  );
+
+  const localNotes = React.useMemo(() => {
+    return getCourseNotes(courseNode?.code || courseCode, courseNode);
+  }, [courseNode, courseCode]);
+
+  // Notion state
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [isOfflineFallback, setIsOfflineFallback] = React.useState(false);
+  const [notionData, setNotionData] = React.useState<{
+    properties: any;
+    blocks: any[];
+    icon?: any;
+    cover?: any;
+  } | null>(null);
+
+  // Local storage checklist state for local fallback notes
+  const storageKey = `course_notes_checklist_${courseNode?.code || courseCode}`;
+  const [checkedItems, setCheckedItems] = React.useState<Record<number, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  // Sync checklist state when course changes
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`course_notes_checklist_${courseNode?.code || courseCode}`);
+      setCheckedItems(saved ? JSON.parse(saved) : {});
+    } catch {
+      setCheckedItems({});
+    }
+  }, [courseNode?.code, courseCode]);
+
+  const handleToggleCheck = (index: number) => {
+    const updated = { ...checkedItems, [index]: !checkedItems[index] };
+    setCheckedItems(updated);
+    localStorage.setItem(storageKey, JSON.stringify(updated));
+    const isNowChecked = updated[index];
+    const topicText = localNotes.syllabus[index];
+    window.dispatchEvent(new CustomEvent('trigger-toast', {
+      detail: { message: isNowChecked ? `Marked complete: "${topicText}"` : `Marked incomplete: "${topicText}"` }
+    }));
+  };
+
+  // Fetch Notion notes on mount or when courseCode changes
+  React.useEffect(() => {
+    let active = true;
+    const cacheKey = `notion_course_notes_${courseNode?.code || courseCode}`;
+    const cacheDuration = 10 * 60 * 1000; // 10 minutes
+
+    const fetchNotes = async () => {
+      // 1. Check local cache
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const { timestamp, data } = JSON.parse(cached);
+          if (Date.now() - timestamp < cacheDuration) {
+            setNotionData(data);
+            setIsLoading(false);
+            setIsOfflineFallback(false);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to parse cached Notion notes', err);
+      }
+
+      setIsLoading(true);
+
+      // 2. Fetch from proxy API
+      try {
+        const url = `/api/notes?courseCode=${encodeURIComponent(courseNode?.code || courseCode)}`;
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`API returned status ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (!active) return;
+
+        // Save to cache
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify({
+            timestamp: Date.now(),
+            data: {
+              properties: data.properties || {},
+              blocks: data.blocks || [],
+              icon: data.icon,
+              cover: data.cover
+            }
+          }));
+        } catch (err) {
+          console.warn('Failed to write Notion notes to cache', err);
+        }
+
+        setNotionData(data);
+        setIsLoading(false);
+        setIsOfflineFallback(false);
+      } catch (error) {
+        console.error('Failed fetching live Notion notes:', error);
+        
+        if (!active) return;
+
+        // Fail silently to local fallback
+        setIsOfflineFallback(true);
+        setIsLoading(false);
+        
+        // Dispatch custom toast notification to alert the user
+        window.dispatchEvent(new CustomEvent('trigger-toast', {
+          detail: { message: 'Offline Mode: Loaded local study templates.' }
+        }));
+      }
+    };
+
+    fetchNotes();
+
+    return () => {
+      active = false;
+    };
+  }, [courseNode?.code, courseCode]);
+
+  const unlocks = React.useMemo(() => {
+    if (!courseNode) return [];
+    return bscsCurriculum.filter(c =>
+      c.prerequisites.some(p => p.replace(/\s+/g, '').toLowerCase() === courseNode.code.replace(/\s+/g, '').toLowerCase())
+    );
+  }, [courseNode]);
+
+  if (!courseNode) {
+    return (
+      <div className="detail-pane" style={{ justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ textAlign: 'center', color: 'var(--text-dimmed)' }}>
+          <Info size={32} style={{ marginBottom: 8, opacity: 0.5, margin: '0 auto' }} />
+          <p style={{ fontSize: '13px' }}>Course not found in database</p>
+        </div>
+      </div>
+    );
+  }
+
+  const getStreamLabel = (stream: string) => {
+    switch (stream) {
+      case 'computing': return 'Computing Foundations';
+      case 'programming': return 'Programming & Dev';
+      case 'math-theory': return 'Mathematics & Theory';
+      case 'systems-networks': return 'Systems & Networks';
+      case 'ge': return 'General Education';
+      case 'elective': return 'Track Elective';
+      default: return 'PE / NSTP / Others';
+    }
+  };
+
+  // Safe property extraction helpers
+  const getNotionPropertyString = (prop: any): string => {
+    if (!prop) return '';
+    if (prop.type === 'title' && prop.title) {
+      return prop.title.map((t: any) => t.plain_text).join('');
+    }
+    if (prop.type === 'rich_text' && prop.rich_text) {
+      return prop.rich_text.map((t: any) => t.plain_text).join('');
+    }
+    if (prop.type === 'select' && prop.select) {
+      return prop.select.name || '';
+    }
+    if (prop.type === 'status' && prop.status) {
+      return prop.status.name || '';
+    }
+    return '';
+  };
+
+  const getEmojiIcon = (iconObj: any) => {
+    if (!iconObj) return '';
+    if (iconObj.type === 'emoji') return iconObj.emoji;
+    return '';
+  };
+
+  const getCoverUrl = (coverObj: any) => {
+    if (!coverObj) return '';
+    if (coverObj.type === 'external' && coverObj.external) return coverObj.external.url;
+    if (coverObj.type === 'file' && coverObj.file) return coverObj.file.url;
+    return '';
+  };
+
+  // Properties derived from live data or fallbacks
+  const status = notionData ? (getNotionPropertyString(notionData.properties?.Status) || localNotes.status) : localNotes.status;
+  const difficulty = notionData ? (getNotionPropertyString(notionData.properties?.Difficulty) || localNotes.difficulty) : localNotes.difficulty;
+  const summary = notionData ? (
+    getNotionPropertyString(notionData.properties?.Summary) || 
+    getNotionPropertyString(notionData.properties?.Description) || 
+    localNotes.summary
+  ) : localNotes.summary;
+  const emoji = notionData ? (getEmojiIcon(notionData.icon) || localNotes.emoji) : localNotes.emoji;
+  const coverUrl = notionData ? getCoverUrl(notionData.cover) : '';
+
+  const statusColorClass = status === 'Completed' ? 'status-completed' 
+    : status === 'In Progress' ? 'status-in-progress' 
+    : 'status-upcoming';
+
+  const diffColorClass = difficulty === 'Easy' ? 'diff-easy' 
+    : difficulty === 'Medium' ? 'diff-medium' 
+    : 'diff-hard';
+
+  const coverStyle = coverUrl 
+    ? { backgroundImage: `url(${coverUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+    : {};
+
+  // Loading skeleton view
+  if (isLoading) {
+    return (
+      <div className="detail-pane notion-skeleton-pulse" style={{ position: 'relative' }}>
+        {/* Cover Skeleton */}
+        <div className="course-notes-cover notion-skeleton-bar" style={{ opacity: 0.15 }}></div>
+        
+        {/* Floating Emoji Skeleton */}
+        <div style={{
+          width: '50px',
+          height: '50px',
+          borderRadius: '12px',
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          marginTop: '-25px',
+          marginBottom: '16px',
+          position: 'relative',
+          zIndex: 5
+        }}></div>
+
+        {/* Title Skeletons */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
+          <div className="notion-skeleton-bar" style={{ width: '80px', height: '14px' }}></div>
+          <div className="notion-skeleton-bar" style={{ width: '70%', height: '24px' }}></div>
+          <div className="notion-skeleton-bar" style={{ width: '150px', height: '12px' }}></div>
+        </div>
+
+        {/* Properties Grid Skeleton */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', margin: '20px 0', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
+          {[1, 2, 3, 4].map(n => (
+            <div key={n} style={{ display: 'grid', gridTemplateColumns: '110px 1fr', alignItems: 'center' }}>
+              <div className="notion-skeleton-bar" style={{ width: '70px', height: '12px' }}></div>
+              <div className="notion-skeleton-bar" style={{ width: '100px', height: '12px' }}></div>
+            </div>
+          ))}
+        </div>
+
+        {/* Content Lines Skeleton */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
+          <div className="notion-skeleton-bar" style={{ width: '130px', height: '14px', marginBottom: '8px' }}></div>
+          <div className="notion-skeleton-bar" style={{ width: '100%', height: '12px' }}></div>
+          <div className="notion-skeleton-bar" style={{ width: '95%', height: '12px' }}></div>
+          <div className="notion-skeleton-bar" style={{ width: '60%', height: '12px' }}></div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="detail-pane" style={{ position: 'relative' }}>
+      {/* Cover Gradient Banner or Notion Cover */}
+      <div className="course-notes-cover" style={coverStyle}></div>
+
+      {/* Floating Emoji */}
+      <span className="course-notes-emoji">{emoji}</span>
+
+      {/* Header */}
+      <div className="detail-header" style={{ marginTop: 0 }}>
+        <div className="detail-category">{courseNode.code}</div>
+        <h2 className="detail-title">{courseNode.name}</h2>
+        <p className="detail-subtitle">
+          {courseNode.year === 1 ? '1st' : courseNode.year === 2 ? '2nd' : courseNode.year === 3 ? '3rd' : '4th'} Year · {courseNode.semester === 1 ? '1st Semester' : courseNode.semester === 2 ? '2nd Semester' : 'Summer Term'}
+        </p>
+      </div>
+
+      {/* Offline warning banner */}
+      {isOfflineFallback && (
+        <div className="notion-offline-banner" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          backgroundColor: 'rgba(234, 179, 8, 0.06)',
+          border: '1px dashed rgba(234, 179, 8, 0.25)',
+          borderRadius: '6px',
+          padding: '10px 14px',
+          margin: '12px 0',
+          color: '#eab308',
+          fontSize: '11.5px',
+          lineHeight: '1.4'
+        }}>
+          <Info size={14} style={{ flexShrink: 0 }} />
+          <span>Viewing offline fallback template. Configure your Notion credentials to sync live study notes.</span>
+        </div>
+      )}
+
+      {/* Notion Properties Grid */}
+      <div className="notion-properties-table">
+        <div className="notion-property-row">
+          <span className="notion-property-label">
+            <span style={{ fontSize: '11px', display: 'flex', alignItems: 'center' }}>🟢</span> Status
+          </span>
+          <span className="notion-property-value">
+            <span className={`notion-badge ${statusColorClass}`}>{status}</span>
+          </span>
+        </div>
+        <div className="notion-property-row">
+          <span className="notion-property-label">
+            <span style={{ fontSize: '11px', display: 'flex', alignItems: 'center' }}>🧠</span> Stream
+          </span>
+          <span className="notion-property-value">
+            <span style={{ fontSize: '12px', fontWeight: 500 }}>{getStreamLabel(courseNode.stream)}</span>
+          </span>
+        </div>
+        <div className="notion-property-row">
+          <span className="notion-property-label">
+            <span style={{ fontSize: '11px', display: 'flex', alignItems: 'center' }}>🪙</span> Credits
+          </span>
+          <span className="notion-property-value" style={{ fontSize: '12px' }}>
+            {courseNode.units.toFixed(1)} Units ({courseNode.lec.toFixed(1)} Lec, {courseNode.lab.toFixed(1)} Lab)
+          </span>
+        </div>
+        <div className="notion-property-row">
+          <span className="notion-property-label">
+            <span style={{ fontSize: '11px', display: 'flex', alignItems: 'center' }}>📈</span> Difficulty
+          </span>
+          <span className="notion-property-value">
+            <span className={`notion-badge ${diffColorClass}`}>{difficulty}</span>
+          </span>
+        </div>
+        <div className="notion-property-row">
+          <span className="notion-property-label">
+            <span style={{ fontSize: '11px', display: 'flex', alignItems: 'center' }}>🔗</span> Prerequisites
+          </span>
+          <span className="notion-property-value">
+            {courseNode.prerequisites.length > 0 ? (
+              courseNode.prerequisites.map(pCode => (
+                <button
+                  key={pCode}
+                  className="notion-link-badge"
+                  onClick={() => onSelectCourseCode && onSelectCourseCode(pCode)}
+                >
+                  {pCode}
+                </button>
+              ))
+            ) : (
+              <span className="notion-link-badge-none">None</span>
+            )}
+          </span>
+        </div>
+        <div className="notion-property-row">
+          <span className="notion-property-label">
+            <span style={{ fontSize: '11px', display: 'flex', alignItems: 'center' }}>🔑</span> Unlocks
+          </span>
+          <span className="notion-property-value">
+            {unlocks.length > 0 ? (
+              unlocks.map(dep => (
+                <button
+                  key={dep.code}
+                  className="notion-link-badge"
+                  onClick={() => onSelectCourseCode && onSelectCourseCode(dep.code)}
+                >
+                  {dep.code}
+                </button>
+              ))
+            ) : (
+              <span className="notion-link-badge-none">None (Terminal course)</span>
+            )}
+          </span>
+        </div>
+      </div>
+
+      <div className="detail-body">
+        {/* Course Summary */}
+        <div className="detail-section-title">Course Description</div>
+        <p className="detail-description" style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>
+          {summary}
+        </p>
+
+        {isOfflineFallback ? (
+          /* ==========================================
+             OFFLINE / FALLBACK STATIC VIEW
+             ========================================== */
+          <>
+            {/* Syllabus Checklist */}
+            <div className="notion-checklist-title">Course Syllabus & Topics</div>
+            <div className="notion-checklist">
+              {localNotes.syllabus.map((topic, idx) => {
+                const isChecked = !!checkedItems[idx];
+                return (
+                  <div
+                    key={idx}
+                    className="notion-checklist-item"
+                    onClick={() => handleToggleCheck(idx)}
+                  >
+                    <div className={`notion-checkbox ${isChecked ? 'checked' : ''}`}>
+                      {isChecked && <span className="notion-checkbox-check">✓</span>}
+                    </div>
+                    <span className={`notion-checklist-text ${isChecked ? 'checked' : ''}`}>
+                      {topic}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Study Notes Content */}
+            <div className="detail-section-title">Study Notes & Concepts</div>
+            {localNotes.sections.map((section, idx) => {
+              if (section.type === 'callout') {
+                return (
+                  <div key={idx} className="notion-callout">
+                    <div className="notion-callout-icon">{section.icon || '💡'}</div>
+                    <div className="notion-callout-content">
+                      {section.content.split('**').map((chunk, i) => i % 2 === 1 ? <strong key={i}>{chunk}</strong> : chunk)}
+                    </div>
+                  </div>
+                );
+              } else if (section.type === 'formula') {
+                return (
+                  <div key={idx} className="notion-formula-block">
+                    {section.content}
+                  </div>
+                );
+              } else if (section.type === 'code') {
+                return (
+                  <NotionCodeBlock
+                    key={idx}
+                    code={section.content}
+                    language={section.codeLanguage || 'code'}
+                  />
+                );
+              } else {
+                return (
+                  <p key={idx} className="detail-description">
+                    {section.content}
+                  </p>
+                );
+              }
+            })}
+
+            {/* Resources References */}
+            {localNotes.resources.length > 0 && (
+              <>
+                <div className="detail-section-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '20px' }}>
+                  <BookOpen size={13} style={{ opacity: 0.6 }} />
+                  Study Resources
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px' }}>
+                  {localNotes.resources.map((res, idx) => (
+                    <a
+                      key={idx}
+                      href={res.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="skill-doc-link"
+                      style={{ display: 'inline-flex', alignSelf: 'flex-start', margin: 0 }}
+                    >
+                      <ExternalLink size={13} />
+                      <span>{res.name}</span>
+                    </a>
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        ) : (
+          /* ==========================================
+             ONLINE LIVE NOTION API BLOCK RENDERING
+             ========================================== */
+          <>
+            <div className="detail-section-title">Study Notes & Concepts</div>
+            <NotionBlockRenderer
+              blocks={notionData?.blocks || []}
+              onPrerequisiteClick={onSelectCourseCode}
+            />
+          </>
+        )}
+
+        {/* Footer map link */}
+        <div className="notion-notes-footer">
+          <button
+            className="notion-notes-map-btn"
+            onClick={() => onSelectCourseCode && onSelectCourseCode('OVERVIEW')}
+            aria-label="View in Curriculum Mind Map"
+          >
+            <span>← View in Curriculum Mind Map</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Description editing functionality removed - descriptions are static
+
 
 // ====================================================
 // MAIN COMPONENT: DetailPanel
@@ -594,6 +1144,19 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedItem, type, on
   }
 
   if (type === 'welcome') {
+    if (selectedItem.code === 'OVERVIEW') {
+      return (
+        <CurriculumRoadmap
+          selectedCourseCode="OVERVIEW"
+          onSelectCourse={(code) => {
+            if (onSelectCourseCode) {
+              onSelectCourseCode(code);
+            }
+          }}
+        />
+      );
+    }
+
     return (
       <div className="detail-pane">
         <div className="welcome-header-layout">
@@ -706,33 +1269,75 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedItem, type, on
 
   if (type === 'skill') {
     const skill = selectedItem as Skill;
+    const skillNotes = skill.notes || [];
+
+    const levelColor = skill.level === 'Advanced' ? '#10b981' 
+      : skill.level === 'Intermediate' ? 'var(--accent-color)' 
+      : '#eab308';
+
     return (
       <div className="detail-pane">
         <div className="detail-header">
-          <div className="detail-category">{skill.category} extension</div>
+          <div className="detail-category">{skill.category} reference</div>
           <h2 className="detail-title">{skill.name}</h2>
-          <p className="detail-subtitle">{skill.level} Proficiency</p>
+          <p className="detail-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span 
+              className="skill-level-dot" 
+              style={{ 
+                display: 'inline-block', width: 8, height: 8, borderRadius: '50%', 
+                backgroundColor: levelColor, flexShrink: 0 
+              }} 
+            />
+            {skill.level} Proficiency
+          </p>
         </div>
 
         <div className="detail-body">
-          <div className="detail-section-title">Capability Brief</div>
-          <p className="detail-description">
-            {skill.category === 'languages' && `Familiarity with syntax, debugging compilers, and utilizing basic structure algorithms in ${skill.name}.`}
-            {skill.category === 'tools' && `Daily usage of ${skill.name} for local environment workspace management, version control, or execution workflows.`}
-            {skill.category === 'concepts' && `Theoretical and hands-on comprehension of ${skill.name} applied during computer science laboratory tasks.`}
-          </p>
+          {/* Study Notes Section */}
+          <div className="detail-section-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <StickyNote size={13} style={{ opacity: 0.6 }} />
+            Study Notes
+          </div>
+          <ul className="skill-notes-list">
+            {skillNotes.map((note, idx) => (
+              <li key={idx} className="skill-note-item">
+                <span className="skill-note-bullet">›</span>
+                <span className="skill-note-text">{note}</span>
+              </li>
+            ))}
+          </ul>
 
-          <div className="detail-section-title">Proficiency Metrics</div>
+          {/* Classification Info */}
+          <div className="detail-section-title">Classification</div>
           <div className="stats-row" style={{ flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Competency Level:</span>
-              <span style={{ color: 'var(--accent-color)', fontWeight: 600 }}>{skill.level}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Category Classification:</span>
+              <span style={{ color: 'var(--text-muted)' }}>Category:</span>
               <span style={{ textTransform: 'capitalize' }}>{skill.category}</span>
             </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Competency:</span>
+              <span style={{ color: levelColor, fontWeight: 600 }}>{skill.level}</span>
+            </div>
           </div>
+
+          {/* Documentation Link */}
+          {skill.docUrl && (
+            <>
+              <div className="detail-section-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <BookOpen size={13} style={{ opacity: 0.6 }} />
+                Reference Documentation
+              </div>
+              <a
+                href={skill.docUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="skill-doc-link"
+              >
+                <ExternalLink size={13} />
+                <span>{skill.docLabel || 'Open Documentation'}</span>
+              </a>
+            </>
+          )}
         </div>
       </div>
     );
@@ -741,13 +1346,9 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedItem, type, on
   if (type === 'course') {
     const course = selectedItem as AcademicCourse;
     return (
-      <CurriculumRoadmap
-        selectedCourseCode={course.code}
-        onSelectCourse={(code) => {
-          if (onSelectCourseCode) {
-            onSelectCourseCode(code);
-          }
-        }}
+      <CourseNotesView
+        courseCode={course.code}
+        onSelectCourseCode={onSelectCourseCode}
       />
     );
   }

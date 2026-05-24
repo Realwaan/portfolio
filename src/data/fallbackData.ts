@@ -18,6 +18,9 @@ export interface Skill {
   category: 'languages' | 'tools' | 'concepts';
   level: string;
   iconName: string;
+  notes: string[];
+  docUrl?: string;
+  docLabel?: string;
 }
 
 export interface AcademicCourse {
@@ -145,16 +148,146 @@ export const fallbackProfileData: ProfileData = {
     }
   ],
   skills: [
-    { name: "C++ / Systems Programming", category: "languages", level: "Intermediate", iconName: "Cpu" },
-    { name: "TypeScript / JavaScript", category: "languages", level: "Intermediate", iconName: "Code" },
-    { name: "Python / Scripting", category: "languages", level: "Intermediate", iconName: "FileCode" },
-    { name: "HTML5 / Vanilla CSS3", category: "languages", level: "Advanced", iconName: "Layout" },
-    { name: "Git & Version Control", category: "tools", level: "Advanced", iconName: "GitBranch" },
-    { name: "React & Vite", category: "tools", level: "Intermediate", iconName: "Atom" },
-    { name: "Windows Powershell / Bash", category: "tools", level: "Intermediate", iconName: "Terminal" },
-    { name: "Object-Oriented Programming (OOP)", category: "concepts", level: "Intermediate", iconName: "Layers" },
-    { name: "Discrete Math & Logic Gates", category: "concepts", level: "Intermediate", iconName: "CheckSquare" },
-    { name: "Algorithms & Graph Navigation", category: "concepts", level: "Beginner", iconName: "Compass" }
+    {
+      name: "C++ / Systems Programming",
+      category: "languages",
+      level: "Intermediate",
+      iconName: "Cpu",
+      notes: [
+        "Pointers, references, and manual memory management via new/delete",
+        "STL containers (vector, map, set) and iterator patterns",
+        "Compiled with g++ on MinGW; familiar with compiler flags (-Wall, -O2)",
+        "Object-oriented class hierarchies, inheritance, and polymorphism"
+      ],
+      docUrl: "https://en.cppreference.com/w/",
+      docLabel: "cppreference.com"
+    },
+    {
+      name: "TypeScript / JavaScript",
+      category: "languages",
+      level: "Intermediate",
+      iconName: "Code",
+      notes: [
+        "Type annotations, interfaces, generics, and union/intersection types",
+        "ES6+ features: arrow functions, destructuring, async/await, modules",
+        "DOM manipulation and event-driven UI logic",
+        "npm ecosystem, package.json scripts, and module bundling"
+      ],
+      docUrl: "https://www.typescriptlang.org/docs/",
+      docLabel: "TypeScript Docs"
+    },
+    {
+      name: "Python / Scripting",
+      category: "languages",
+      level: "Intermediate",
+      iconName: "FileCode",
+      notes: [
+        "Automation scripts for file I/O, web scraping, and API calls",
+        "List comprehensions, generators, and context managers",
+        "Familiar with pip, virtualenv, and requirements.txt workflows",
+        "Used for building Discord/Telegram bot integrations"
+      ],
+      docUrl: "https://docs.python.org/3/",
+      docLabel: "Python 3 Docs"
+    },
+    {
+      name: "HTML5 / Vanilla CSS3",
+      category: "languages",
+      level: "Advanced",
+      iconName: "Layout",
+      notes: [
+        "Semantic HTML structure: header, main, section, article, nav",
+        "CSS custom properties, flexbox, grid, and responsive breakpoints",
+        "Keyframe animations, transitions, and pseudo-element techniques",
+        "Accessibility attributes: aria-labels, roles, focus management"
+      ],
+      docUrl: "https://developer.mozilla.org/en-US/docs/Web",
+      docLabel: "MDN Web Docs"
+    },
+    {
+      name: "Git & Version Control",
+      category: "tools",
+      level: "Advanced",
+      iconName: "GitBranch",
+      notes: [
+        "Branching strategies: feature branches, merge vs rebase workflows",
+        "Interactive rebase, cherry-pick, stash, and conflict resolution",
+        "GitHub pull requests, issue tracking, and Actions CI basics",
+        ".gitignore patterns and repository housekeeping"
+      ],
+      docUrl: "https://git-scm.com/doc",
+      docLabel: "Git Reference"
+    },
+    {
+      name: "React & Vite",
+      category: "tools",
+      level: "Intermediate",
+      iconName: "Atom",
+      notes: [
+        "Functional components, hooks (useState, useEffect, useMemo, useRef)",
+        "Component composition, props drilling, and lifting state up",
+        "Vite dev server with HMR; configuring vite.config.ts plugins",
+        "JSX/TSX patterns and conditional rendering techniques"
+      ],
+      docUrl: "https://react.dev/learn",
+      docLabel: "React Learn"
+    },
+    {
+      name: "Windows Powershell / Bash",
+      category: "tools",
+      level: "Intermediate",
+      iconName: "Terminal",
+      notes: [
+        "PowerShell cmdlets: Get-ChildItem, Select-String, piping objects",
+        "Bash scripting: loops, conditionals, sed/awk for text processing",
+        "Environment variables, PATH configuration, and profile scripts",
+        "Task automation: scheduled scripts, file watchers, batch renaming"
+      ],
+      docUrl: "https://learn.microsoft.com/en-us/powershell/",
+      docLabel: "PowerShell Docs"
+    },
+    {
+      name: "Object-Oriented Programming (OOP)",
+      category: "concepts",
+      level: "Intermediate",
+      iconName: "Layers",
+      notes: [
+        "Four pillars: encapsulation, abstraction, inheritance, polymorphism",
+        "SOLID principles overview — single responsibility and open/closed",
+        "Design patterns encountered: Factory, Observer, Strategy (intro level)",
+        "Applied in C++ class labs and Java-based coursework exercises"
+      ],
+      docUrl: "https://refactoring.guru/design-patterns",
+      docLabel: "Refactoring Guru"
+    },
+    {
+      name: "Discrete Math & Logic Gates",
+      category: "concepts",
+      level: "Intermediate",
+      iconName: "CheckSquare",
+      notes: [
+        "Propositional and predicate logic; truth tables and logical equivalences",
+        "Set theory, relations, functions, and proof techniques (direct, contradiction)",
+        "Boolean algebra and combinational logic: AND, OR, NOT, XOR gates",
+        "Karnaugh maps for simplifying boolean expressions"
+      ],
+      docUrl: "https://discrete.openmathbooks.org/dmoi3.html",
+      docLabel: "Discrete Math Textbook"
+    },
+    {
+      name: "Algorithms & Graph Navigation",
+      category: "concepts",
+      level: "Beginner",
+      iconName: "Compass",
+      notes: [
+        "Sorting fundamentals: bubble, selection, insertion, merge sort",
+        "Big-O notation for time/space complexity analysis",
+        "Graph representations: adjacency list vs adjacency matrix",
+        "BFS and DFS traversal concepts (introductory coursework)"
+      ],
+      docUrl: "https://visualgo.net/en",
+      docLabel: "VisuAlgo"
+    }
   ],
   courses: bscsCurriculum.map(c => ({
     code: c.code,

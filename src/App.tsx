@@ -19,6 +19,13 @@ export default function App() {
   const [showActionModal, setShowActionModal] = useState(false);
   const [showMobileDrawer, setShowMobileDrawer] = useState(false);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    welcome: true,
+    project: true,
+    course: false,
+    skill: true,
+    navigation: true,
+  });
   
   // Create search input ref to maintain focus
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -56,7 +63,13 @@ export default function App() {
       id: String(Date.now()),
       message,
     };
-    setToasts((prev) => [...prev, newToast]);
+    setToasts((prev) => {
+      const next = [...prev, newToast];
+      if (next.length > 3) {
+        return next.slice(next.length - 3);
+      }
+      return next;
+    });
   };
 
   // Switch accent theme
@@ -105,7 +118,7 @@ export default function App() {
       id: 'course-overview',
       name: 'BSCS Curriculum Roadmap',
       subtitle: 'Overview, Mind Map & Summation',
-      category: 'course',
+      category: 'welcome',
       badge: 'CIT-U',
       iconName: 'GraduationCap',
       rawItem: { code: 'OVERVIEW', name: 'Curriculum Overview', description: 'Curriculum Roadmap Overview, Mind Map & Summation', semester: 'ALL' },
@@ -170,9 +183,30 @@ export default function App() {
     return items;
   }, [repos]);
 
+  // Count total items per section from flat list
+  const sectionCounts = useMemo(() => {
+    const counts: Record<string, number> = {
+      welcome: 0,
+      project: 0,
+      course: 0,
+      skill: 0,
+      navigation: 0,
+    };
+    flatItemsList.forEach((item) => {
+      if (counts[item.category] !== undefined) {
+        counts[item.category]++;
+      }
+    });
+    return counts;
+  }, [flatItemsList]);
+
   // Filter items matching search
   const filteredItems = useMemo(() => {
-    if (!search.trim()) return flatItemsList;
+    if (!search.trim()) {
+      return flatItemsList.filter((item) => {
+        return expandedSections[item.category];
+      });
+    }
     const query = search.toLowerCase();
     return flatItemsList.filter((item) => {
       const nameMatch = item.name.toLowerCase().includes(query);
@@ -191,7 +225,7 @@ export default function App() {
       
       return nameMatch || subtitleMatch || badgeMatch || rawDescriptionMatch;
     });
-  }, [search, flatItemsList]);
+  }, [search, flatItemsList, expandedSections]);
 
   // Keep selected index in bounds when items change
   useEffect(() => {
@@ -208,17 +242,28 @@ export default function App() {
   // Handle course selections from the CurriculumRoadmap
   const handleSelectCourseCode = (code: string) => {
     const targetId = code === 'OVERVIEW' ? 'course-overview' : `course-${code}`;
-    const targetIdxInFlat = flatItemsList.findIndex(item => item.id === targetId);
-    if (targetIdxInFlat === -1) return;
+    const isAcademicsExpanded = expandedSections.course;
+    
+    // Auto-expand if selecting a specific course
+    if (code !== 'OVERVIEW' && !isAcademicsExpanded) {
+      setExpandedSections(prev => ({ ...prev, course: true }));
+    }
 
     const isMobile = window.innerWidth <= 860;
-    const targetIdxInFiltered = filteredItems.findIndex(item => item.id === targetId);
-    if (targetIdxInFiltered === -1) {
+    
+    if (search.trim() || (code !== 'OVERVIEW' && !isAcademicsExpanded)) {
       ignoreSearchResetRef.current = true;
       setSearch('');
-      setSelectedIndex(targetIdxInFlat);
+      setExpandedSections(prev => ({ ...prev, course: true }));
+      const targetIdxInFlat = flatItemsList.findIndex(item => item.id === targetId);
+      if (targetIdxInFlat !== -1) {
+        setSelectedIndex(targetIdxInFlat);
+      }
     } else {
-      setSelectedIndex(targetIdxInFiltered);
+      const targetIdxInFiltered = filteredItems.findIndex(item => item.id === targetId);
+      if (targetIdxInFiltered !== -1) {
+        setSelectedIndex(targetIdxInFiltered);
+      }
     }
 
     // Auto-open detail drawer on mobile when navigating courses
@@ -362,16 +407,21 @@ export default function App() {
               </div>
             ) : (
               <>
-                {/* Left List */}
-                <CommandList
-                  items={filteredItems}
-                  selectedIndex={selectedIndex}
-                  onItemClick={executeItemAction}
-                  onHoverItem={(index) => setSelectedIndex(index)}
-                />
+                 {/* Left List */}
+                 <CommandList
+                   items={filteredItems}
+                   selectedIndex={selectedIndex}
+                   onItemClick={executeItemAction}
+                   onHoverItem={(index) => setSelectedIndex(index)}
+                   expandedSections={expandedSections}
+                   onToggleSection={(category) => setExpandedSections(prev => ({ ...prev, [category]: !prev[category] }))}
+                   sectionCounts={sectionCounts}
+                   isSearching={!!search.trim()}
+                 />
 
                 {/* Right Detail Pane */}
                 <DetailPanel
+                  key={selectedItem ? `${selectedItem.category}-${selectedItem.id}` : 'empty'}
                   selectedItem={selectedItem?.rawItem}
                   type={selectedItem?.category}
                   onSelectCourseCode={handleSelectCourseCode}
@@ -449,6 +499,7 @@ export default function App() {
                 </button>
               </div>
               <DetailPanel
+                key={`mobile-${selectedItem.category}-${selectedItem.id}`}
                 selectedItem={selectedItem.rawItem}
                 type={selectedItem.category}
                 onSelectCourseCode={handleSelectCourseCode}
