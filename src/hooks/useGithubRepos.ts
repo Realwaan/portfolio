@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { fallbackProfileData } from '../data/fallbackData';
 import type { Project } from '../data/fallbackData';
 
-const CACHE_KEY = 'raycast_portfolio_repos_v3';
-const CACHE_TIME_KEY = 'raycast_portfolio_repos_time_v3';
+const CACHE_KEY = 'raycast_portfolio_repos_v4';
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes cache
 
 const PROJECT_DESCRIPTIONS: Record<string, string> = {
@@ -33,30 +32,34 @@ export function useGithubRepos(username: string) {
   const [repos, setRepos] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isOfflineFallback, setIsOfflineFallback] = useState(false);
 
   useEffect(() => {
     if (!username) {
       setRepos(fallbackProfileData.projects);
       setLoading(false);
+      setIsOfflineFallback(false);
       return;
     }
 
     const fetchRepos = async () => {
       try {
         // Check localStorage cache first
-        const cachedData = localStorage.getItem(CACHE_KEY);
-        const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
-
-        if (cachedData && cachedTime) {
-          const isExpired = Date.now() - parseInt(cachedTime, 10) > CACHE_DURATION;
-          if (!isExpired) {
-            const parsedRepos = JSON.parse(cachedData) as Project[];
-            if (parsedRepos.length > 0) {
-              setRepos(parsedRepos);
+        try {
+          const cached = localStorage.getItem(CACHE_KEY);
+          if (cached) {
+            const { timestamp, data } = JSON.parse(cached);
+            const isExpired = Date.now() - timestamp > CACHE_DURATION;
+            if (!isExpired && data && data.length > 0) {
+              setRepos(data);
               setLoading(false);
+              setError(null);
+              setIsOfflineFallback(false);
               return;
             }
           }
+        } catch (err) {
+          console.warn('Failed to parse cached GitHub repositories', err);
         }
 
         // Fetch from API
@@ -89,21 +92,39 @@ export function useGithubRepos(username: string) {
         // If no repos fetched, use fallback
         if (userRepos.length === 0) {
           setRepos(fallbackProfileData.projects);
+          setIsOfflineFallback(false);
         } else {
           setRepos(userRepos);
+          setIsOfflineFallback(false);
           // Update cache
-          localStorage.setItem(CACHE_KEY, JSON.stringify(userRepos));
-          localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
+          try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({
+              timestamp: Date.now(),
+              data: userRepos
+            }));
+          } catch (err) {
+            console.warn('Failed to write GitHub repositories to cache', err);
+          }
         }
         setError(null);
       } catch (err: any) {
         console.warn('GitHub fetch failed, using fallback data. Error details:', err.message);
         setRepos(fallbackProfileData.projects);
+        setIsOfflineFallback(true);
         if (err.message === 'API_RATE_LIMIT') {
           setError('Rate limit exceeded. Using fallback projects.');
         } else {
           setError(err.message || 'Failed to fetch repositories.');
         }
+
+        // Dispatch custom toast notification to alert the user
+        window.dispatchEvent(new CustomEvent('trigger-toast', {
+          detail: {
+            message: err.message === 'API_RATE_LIMIT'
+              ? 'Rate limit exceeded: Loaded local projects.'
+              : 'Offline Mode: Loaded local projects.'
+          }
+        }));
       } finally {
         setLoading(false);
       }
@@ -114,5 +135,5 @@ export function useGithubRepos(username: string) {
 
   // Removed custom-description-updated event listener since editing is deprecated
 
-  return { repos, loading, error };
+  return { repos, data: repos, loading, error, isOfflineFallback };
 }

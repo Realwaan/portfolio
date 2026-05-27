@@ -5,6 +5,7 @@ import { CurriculumRoadmap } from './CurriculumRoadmap';
 import { bscsCurriculum } from '../data/curriculumData';
 import { getCourseNotes } from '../data/courseNotesData';
 import { NotionBlockRenderer } from './NotionBlockRenderer';
+import { useNotionNotes } from '../hooks/useNotionNotes';
 import './DetailPanel.css';
 import './ShowcaseWidgets.css';
 
@@ -635,15 +636,8 @@ const CourseNotesView: React.FC<CourseNotesViewProps> = ({ courseCode, onSelectC
     return getCourseNotes(courseNode?.code || courseCode, courseNode);
   }, [courseNode, courseCode]);
 
-  // Notion state
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [isOfflineFallback, setIsOfflineFallback] = React.useState(false);
-  const [notionData, setNotionData] = React.useState<{
-    properties: any;
-    blocks: any[];
-    icon?: any;
-    cover?: any;
-  } | null>(null);
+  // Notion state hook
+  const { notionData, loading: isLoading, isOfflineFallback } = useNotionNotes(courseNode?.code || courseCode);
 
   // Local storage checklist state for local fallback notes
   const storageKey = `course_notes_checklist_${courseNode?.code || courseCode}`;
@@ -676,85 +670,6 @@ const CourseNotesView: React.FC<CourseNotesViewProps> = ({ courseCode, onSelectC
       detail: { message: isNowChecked ? `Marked complete: "${topicText}"` : `Marked incomplete: "${topicText}"` }
     }));
   };
-
-  // Fetch Notion notes on mount or when courseCode changes
-  React.useEffect(() => {
-    let active = true;
-    const cacheKey = `notion_course_notes_${courseNode?.code || courseCode}`;
-    const cacheDuration = 10 * 60 * 1000; // 10 minutes
-
-    const fetchNotes = async () => {
-      // 1. Check local cache
-      try {
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-          const { timestamp, data } = JSON.parse(cached);
-          if (Date.now() - timestamp < cacheDuration) {
-            setNotionData(data);
-            setIsLoading(false);
-            setIsOfflineFallback(false);
-            return;
-          }
-        }
-      } catch (err) {
-        console.warn('Failed to parse cached Notion notes', err);
-      }
-
-      setIsLoading(true);
-
-      // 2. Fetch from proxy API
-      try {
-        const url = `/api/notes?courseCode=${encodeURIComponent(courseNode?.code || courseCode)}`;
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error(`API returned status ${response.status}`);
-        }
-
-        const data = await response.json();
-        
-        if (!active) return;
-
-        // Save to cache
-        try {
-          localStorage.setItem(cacheKey, JSON.stringify({
-            timestamp: Date.now(),
-            data: {
-              properties: data.properties || {},
-              blocks: data.blocks || [],
-              icon: data.icon,
-              cover: data.cover
-            }
-          }));
-        } catch (err) {
-          console.warn('Failed to write Notion notes to cache', err);
-        }
-
-        setNotionData(data);
-        setIsLoading(false);
-        setIsOfflineFallback(false);
-      } catch (error) {
-        console.error('Failed fetching live Notion notes:', error);
-        
-        if (!active) return;
-
-        // Fail silently to local fallback
-        setIsOfflineFallback(true);
-        setIsLoading(false);
-        
-        // Dispatch custom toast notification to alert the user
-        window.dispatchEvent(new CustomEvent('trigger-toast', {
-          detail: { message: 'Offline Mode: Loaded local study templates.' }
-        }));
-      }
-    };
-
-    fetchNotes();
-
-    return () => {
-      active = false;
-    };
-  }, [courseNode?.code, courseCode]);
 
   const unlocks = React.useMemo(() => {
     if (!courseNode) return [];
