@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { bscsCurriculum, electivesCatalog, bscsSummation } from '../data/curriculumData';
 import type { CourseNode } from '../data/curriculumData';
+import './CurriculumRoadmap.css';
+
 
 interface CurriculumRoadmapProps {
   selectedCourseCode: string; // e.g., "CSIT 111" or "OVERVIEW"

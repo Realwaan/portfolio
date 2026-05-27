@@ -5,6 +5,9 @@ import { CurriculumRoadmap } from './CurriculumRoadmap';
 import { bscsCurriculum } from '../data/curriculumData';
 import { getCourseNotes } from '../data/courseNotesData';
 import { NotionBlockRenderer } from './NotionBlockRenderer';
+import './DetailPanel.css';
+import './ShowcaseWidgets.css';
+
 
 
 // ----------------------------------------------------

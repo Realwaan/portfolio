@@ -1,5 +1,7 @@
 import React from 'react';
 import { Terminal, Settings } from 'lucide-react';
+import './ActionPanel.css';
+
 
 interface ActionPanelProps {
   onActionClick: () => void;

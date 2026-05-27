@@ -1,6 +1,8 @@
 import React from 'react';
 import * as Icons from 'lucide-react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import './CommandList.css';
+
 
 interface ListItem {
   id: string;

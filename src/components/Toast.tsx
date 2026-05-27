@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Check } from 'lucide-react';
+import './Toast.css';
+
 
 export interface ToastItem {
   id: string;

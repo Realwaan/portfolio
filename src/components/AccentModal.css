@@ -1,0 +1,119 @@
+/* Theme Dropdown / Shortcut Modal Sheet */
+.action-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.action-modal {
+  width: 420px;
+  background-color: #121214;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  margin-bottom: 45px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUpModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.action-modal-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dimmed);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.action-modal-list {
+  padding: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.action-modal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-main);
+  transition: background-color 0.1s;
+}
+
+.action-modal-item:hover,
+.action-modal-item.active {
+  background-color: var(--bg-hover);
+}
+
+.action-modal-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Mobile responsive Drawer Sheet */
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.drawer {
+  width: 100%;
+  max-width: 500px;
+  background-color: #121214;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.drawer-drag-handle {
+  width: 40px;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  margin: 10px auto;
+  cursor: pointer;
+}
+
+.drawer-content {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+@media (max-width: 550px) {
+  .action-modal {
+    width: 90% !important;
+    max-width: 380px !important;
+    margin-bottom: 70px !important;
+  }
+}

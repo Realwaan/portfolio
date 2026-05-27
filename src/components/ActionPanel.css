@@ -1,0 +1,83 @@
+/* Action Footer Panel */
+.action-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid var(--border-color);
+  height: 38px;
+  z-index: 11;
+  font-size: 11px;
+  color: var(--text-dimmed);
+  user-select: none;
+}
+
+.action-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.action-left svg {
+  width: 14px;
+  height: 14px;
+  color: var(--text-dimmed);
+}
+
+.action-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.keyboard-shortcut-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.keyboard-shortcut-hint:hover {
+  color: var(--text-muted);
+}
+
+.settings-action-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--text-main);
+  transition: color 0.15s ease;
+}
+
+.settings-action-trigger:hover {
+  color: var(--text-muted);
+}
+
+kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-kbd);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 9px;
+  font-family: var(--font-mono);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+  line-height: 1;
+  min-width: 14px;
+}
+
+@media (max-width: 550px) {
+  .action-panel {
+    height: 45px;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .keyboard-shortcut-hint {
+    display: none !important;
+  }
+}
