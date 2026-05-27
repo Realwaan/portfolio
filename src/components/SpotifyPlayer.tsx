@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Disc3, ChevronLeft, ChevronRight, Music, Play, Pause, RotateCcw, SkipForward, SkipBack } from 'lucide-react';
 import { LYRICS_DATABASE } from '../data/lyricsData';
+import './SpotifyPlayer.css';
+
 
 interface Track {
   id: string;

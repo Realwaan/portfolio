@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, ShieldAlert, Sparkles, X, Check } from 'lucide-react';
+import { Search, ShieldAlert, Sparkles, X } from 'lucide-react';
 import { fallbackProfileData } from './data/fallbackData';
 import { useGithubRepos } from './hooks/useGithubRepos';
 import { CommandList } from './components/CommandList';
@@ -9,7 +9,10 @@ import { ActionPanel } from './components/ActionPanel';
 import { Toast } from './components/Toast';
 import type { ToastItem } from './components/Toast';
 import { SpotifyPlayer } from './components/SpotifyPlayer';
-
+import { WelcomeBanner } from './components/WelcomeBanner';
+import { AccentModal } from './components/AccentModal';
+import { usePortfolioItems } from './hooks/usePortfolioItems';
+import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
 
 export default function App() {
   const [search, setSearch] = useState('');
@@ -26,25 +29,24 @@ export default function App() {
     skill: true,
     navigation: true,
   });
-  
-  // Create search input ref to maintain focus
+
   const searchInputRef = useRef<HTMLInputElement>(null);
-  // Ref to prevent programmatic search clears from resetting selectedIndex
   const ignoreSearchResetRef = useRef(false);
 
   // Fetch GitHub projects
   const { repos, error } = useGithubRepos(fallbackProfileData.githubUsername);
 
+  // Generate unified items list and counts
+  const { flatItemsList, sectionCounts } = usePortfolioItems(repos);
+
   // Focus input automatically on load and when clicking empty space
   useEffect(() => {
     searchInputRef.current?.focus();
-    // Load saved accent
     const savedAccent = localStorage.getItem('raycast_accent');
     if (savedAccent) {
       setAccent(savedAccent as any);
     }
 
-    // Custom event listener to trigger toasts from child components
     const handleCustomToast = (e: Event) => {
       const customEvent = e as CustomEvent;
       if (customEvent.detail?.message) {
@@ -76,129 +78,17 @@ export default function App() {
   const handleAccentChange = (newAccent: 'raycast-red' | 'cit-gold' | 'cit-maroon') => {
     setAccent(newAccent);
     localStorage.setItem('raycast_accent', newAccent);
-    triggerToast(`Accent switched to ${newAccent === 'cit-gold' ? 'CIT Gold' : newAccent === 'cit-maroon' ? 'CIT Maroon' : 'Raycast Red'}`);
+    triggerToast(
+      `Accent switched to ${
+        newAccent === 'cit-gold'
+          ? 'CIT Gold'
+          : newAccent === 'cit-maroon'
+          ? 'CIT Maroon'
+          : 'Raycast Red'
+      }`
+    );
     setShowActionModal(false);
   };
-
-  // Convert raw data sets to unified list format
-  const flatItemsList = useMemo(() => {
-    const items: ListItem[] = [];
-
-    // 1. Welcome Card
-    items.push({
-      id: 'welcome-card',
-      name: fallbackProfileData.name,
-      subtitle: fallbackProfileData.title,
-      category: 'welcome',
-      badge: fallbackProfileData.year,
-      iconName: 'User',
-      rawItem: fallbackProfileData,
-    });
-
-    // 2. Projects
-    repos.forEach((repo) => {
-      // Short and concise description for the left pane list
-      const shortDesc = repo.description && repo.description.length > 25
-        ? repo.description.slice(0, 22) + '...'
-        : repo.description || 'No description provided.';
-
-      items.push({
-        id: `repo-${repo.id}`,
-        name: repo.name,
-        subtitle: shortDesc,
-        category: 'project',
-        badge: repo.language,
-        iconName: 'FolderCode',
-        rawItem: repo,
-      });
-    });
-
-    // 3. Academic Courses
-    items.push({
-      id: 'course-overview',
-      name: 'BSCS Curriculum Roadmap',
-      subtitle: 'Overview, Mind Map & Summation',
-      category: 'welcome',
-      badge: 'CIT-U',
-      iconName: 'GraduationCap',
-      rawItem: { code: 'OVERVIEW', name: 'Curriculum Overview', description: 'Curriculum Roadmap Overview, Mind Map & Summation', semester: 'ALL' },
-    });
-
-    fallbackProfileData.courses.forEach((course) => {
-      items.push({
-        id: `course-${course.code}`,
-        name: course.code,
-        subtitle: course.name,
-        category: 'course',
-        badge: 'CIT-U',
-        iconName: 'GraduationCap',
-        rawItem: course,
-      });
-    });
-
-    // 4. Skills
-    fallbackProfileData.skills.forEach((skill) => {
-      items.push({
-        id: `skill-${skill.name}`,
-        name: skill.name,
-        subtitle: skill.level,
-        category: 'skill',
-        badge: skill.category,
-        iconName: skill.iconName,
-        rawItem: skill,
-      });
-    });
-
-    // 5. Navigation & Contacts
-    items.push(
-      {
-        id: 'nav-email',
-        name: 'Send Email / Inquire',
-        subtitle: fallbackProfileData.email,
-        category: 'navigation',
-        badge: 'Contact',
-        iconName: 'Mail',
-        rawItem: { name: 'Email Contact', value: fallbackProfileData.email, actionLabel: 'Copy Email' },
-      },
-      {
-        id: 'nav-github',
-        name: 'Visit GitHub Profile',
-        subtitle: `github.com/${fallbackProfileData.githubUsername}`,
-        category: 'navigation',
-        badge: 'Link',
-        iconName: 'Github',
-        rawItem: { name: 'GitHub Link', value: `https://github.com/${fallbackProfileData.githubUsername}`, actionLabel: 'Open Link' },
-      },
-      {
-        id: 'nav-linkedin',
-        name: 'Connect on LinkedIn',
-        subtitle: 'Professional network profile',
-        category: 'navigation',
-        badge: 'Link',
-        iconName: 'Linkedin',
-        rawItem: { name: 'LinkedIn Link', value: fallbackProfileData.linkedin, actionLabel: 'Open Link' },
-      }
-    );
-
-    return items;
-  }, [repos]);
-
-  // Count total items per section from flat list
-  const sectionCounts = useMemo(() => {
-    const counts: Record<string, number> = {
-      welcome: 0,
-      project: 0,
-      course: 0,
-      skill: 0,
-      navigation: 0,
-    };
-    flatItemsList.forEach((item) => {
-      if (counts[item.category] !== undefined) {
-        counts[item.category]++;
-      }
-    });
-    return counts;
-  }, [flatItemsList]);
 
   // Filter items matching search
   const filteredItems = useMemo(() => {
@@ -212,8 +102,7 @@ export default function App() {
       const nameMatch = item.name.toLowerCase().includes(query);
       const subtitleMatch = item.subtitle.toLowerCase().includes(query);
       const badgeMatch = item.badge.toLowerCase().includes(query);
-      
-      // Also match full/whole description fields for a better search experience
+
       let rawDescriptionMatch = false;
       if (item.category === 'project' && item.rawItem?.description) {
         rawDescriptionMatch = item.rawItem.description.toLowerCase().includes(query);
@@ -222,7 +111,7 @@ export default function App() {
       } else if (item.category === 'course' && item.rawItem?.description) {
         rawDescriptionMatch = item.rawItem.description.toLowerCase().includes(query);
       }
-      
+
       return nameMatch || subtitleMatch || badgeMatch || rawDescriptionMatch;
     });
   }, [search, flatItemsList, expandedSections]);
@@ -243,30 +132,28 @@ export default function App() {
   const handleSelectCourseCode = (code: string) => {
     const targetId = code === 'OVERVIEW' ? 'course-overview' : `course-${code}`;
     const isAcademicsExpanded = expandedSections.course;
-    
-    // Auto-expand if selecting a specific course
+
     if (code !== 'OVERVIEW' && !isAcademicsExpanded) {
-      setExpandedSections(prev => ({ ...prev, course: true }));
+      setExpandedSections((prev) => ({ ...prev, course: true }));
     }
 
     const isMobile = window.innerWidth <= 860;
-    
+
     if (search.trim() || (code !== 'OVERVIEW' && !isAcademicsExpanded)) {
       ignoreSearchResetRef.current = true;
       setSearch('');
-      setExpandedSections(prev => ({ ...prev, course: true }));
-      const targetIdxInFlat = flatItemsList.findIndex(item => item.id === targetId);
+      setExpandedSections((prev) => ({ ...prev, course: true }));
+      const targetIdxInFlat = flatItemsList.findIndex((item) => item.id === targetId);
       if (targetIdxInFlat !== -1) {
         setSelectedIndex(targetIdxInFlat);
       }
     } else {
-      const targetIdxInFiltered = filteredItems.findIndex(item => item.id === targetId);
+      const targetIdxInFiltered = filteredItems.findIndex((item) => item.id === targetId);
       if (targetIdxInFiltered !== -1) {
         setSelectedIndex(targetIdxInFiltered);
       }
     }
 
-    // Auto-open detail drawer on mobile when navigating courses
     if (isMobile) {
       setShowMobileDrawer(true);
     }
@@ -294,7 +181,6 @@ export default function App() {
         triggerToast(`Opening repository link...`);
       }
     } else {
-      // Toggle details drawer on mobile
       if (isMobile) {
         setShowMobileDrawer(true);
       } else {
@@ -303,78 +189,33 @@ export default function App() {
     }
   };
 
-  // Keyboard navigation controller
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Toggle Action menu on Tab
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        setShowActionModal((prev) => !prev);
-        return;
-      }
-
-      // Close open drawers/menus on Escape
-      if (e.key === 'Escape') {
-        if (showActionModal) {
-          setShowActionModal(false);
-        } else if (showMobileDrawer) {
-          setShowMobileDrawer(false);
-        } else if (search) {
-          setSearch('');
-        }
-        return;
-      }
-
-      // Focus input if any other key is pressed and input is not active
-      if (document.activeElement !== searchInputRef.current && e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
-        searchInputRef.current?.focus();
-      }
-
-      if (filteredItems.length === 0) return;
-
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev + 1) % filteredItems.length);
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev - 1 + filteredItems.length) % filteredItems.length);
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        if (showActionModal) {
-          // Trigger highlights action modal menu index or click
-        } else {
-          executeItemAction(selectedItem);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [filteredItems, selectedIndex, showActionModal, selectedItem, showMobileDrawer, search]);
+  // Register Keyboard Navigation Hook
+  useKeyboardNavigation({
+    filteredItems,
+    setSelectedIndex,
+    showActionModal,
+    setShowActionModal,
+    showMobileDrawer,
+    setShowMobileDrawer,
+    search,
+    setSearch,
+    selectedItem,
+    executeItemAction,
+    searchInputRef,
+  });
 
   return (
     <div className="app-container" data-accent={accent} onClick={() => searchInputRef.current?.focus()}>
       <h1 style={{ position: 'absolute', width: '1px', height: '1px', padding: '0', margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', border: '0' }}>
         Marc Andrei Regulacion | BS Computer Science Student Portfolio
       </h1>
-      
+
       {/* Welcome Guide Info Panel */}
-      {showWelcome && (
-        <div className="welcome-banner" onClick={(e) => e.stopPropagation()}>
-          <div className="welcome-logo">W</div>
-          <div>
-            <strong>CIT-U Portfolio Explorer</strong>. Press <kbd>Tab</kbd> for themes or type <kbd>↑↓</kbd> / <kbd>↵</kbd> to explore.
-          </div>
-          <div className="welcome-banner-close" onClick={() => setShowWelcome(false)}>
-            <X size={15} />
-          </div>
-        </div>
-      )}
+      {showWelcome && <WelcomeBanner onClose={() => setShowWelcome(false)} />}
 
       {/* Main Raycast Window Box & Spotify Bento Module */}
       <div className="portfolio-wrapper" onClick={(e) => e.stopPropagation()}>
         <div className="raycast-window">
-          
           {/* Search header bar */}
           <div className="search-bar-container">
             <Search size={18} className="search-icon" />
@@ -407,17 +248,17 @@ export default function App() {
               </div>
             ) : (
               <>
-                 {/* Left List */}
-                 <CommandList
-                   items={filteredItems}
-                   selectedIndex={selectedIndex}
-                   onItemClick={executeItemAction}
-                   onHoverItem={(index) => setSelectedIndex(index)}
-                   expandedSections={expandedSections}
-                   onToggleSection={(category) => setExpandedSections(prev => ({ ...prev, [category]: !prev[category] }))}
-                   sectionCounts={sectionCounts}
-                   isSearching={!!search.trim()}
-                 />
+                {/* Left List */}
+                <CommandList
+                  items={filteredItems}
+                  selectedIndex={selectedIndex}
+                  onItemClick={executeItemAction}
+                  onHoverItem={(index) => setSelectedIndex(index)}
+                  expandedSections={expandedSections}
+                  onToggleSection={(category) => setExpandedSections((prev) => ({ ...prev, [category]: !prev[category] }))}
+                  sectionCounts={sectionCounts}
+                  isSearching={!!search.trim()}
+                />
 
                 {/* Right Detail Pane */}
                 <DetailPanel
@@ -431,58 +272,21 @@ export default function App() {
           </div>
 
           {/* Actions Footer Bar */}
-          <ActionPanel
-            onActionClick={() => setShowActionModal(true)}
-            accent={accent}
-          />
+          <ActionPanel onActionClick={() => setShowActionModal(true)} accent={accent} />
 
           {/* Settings/Themes Action Dialog Popover */}
           {showActionModal && (
-            <div className="action-modal-overlay" onClick={() => setShowActionModal(false)}>
-              <div className="action-modal" onClick={(e) => e.stopPropagation()}>
-                <div className="action-modal-header">Switch Portfolio Accent Accent</div>
-                <div className="action-modal-list">
-                  <div 
-                    className={`action-modal-item ${accent === 'raycast-red' ? 'active' : ''}`}
-                    onClick={() => handleAccentChange('raycast-red')}
-                  >
-                    <div className="action-modal-item-left">
-                      <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', backgroundColor: '#ff3b30' }}></span>
-                      <span>Raycast Crimson Red</span>
-                    </div>
-                    {accent === 'raycast-red' && <Check size={14} style={{ color: 'var(--accent-color)' }} />}
-                  </div>
-                  <div 
-                    className={`action-modal-item ${accent === 'cit-gold' ? 'active' : ''}`}
-                    onClick={() => handleAccentChange('cit-gold')}
-                  >
-                    <div className="action-modal-item-left">
-                      <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', backgroundColor: '#ffc72c' }}></span>
-                      <span>CIT-U Gold Accent</span>
-                    </div>
-                    {accent === 'cit-gold' && <Check size={14} style={{ color: 'var(--accent-color)' }} />}
-                  </div>
-                  <div 
-                    className={`action-modal-item ${accent === 'cit-maroon' ? 'active' : ''}`}
-                    onClick={() => handleAccentChange('cit-maroon')}
-                  >
-                    <div className="action-modal-item-left">
-                      <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', backgroundColor: '#b31010' }}></span>
-                      <span>CIT-U Maroon Accent</span>
-                    </div>
-                    {accent === 'cit-maroon' && <Check size={14} style={{ color: 'var(--accent-color)' }} />}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <AccentModal
+              accent={accent}
+              onAccentChange={handleAccentChange}
+              onClose={() => setShowActionModal(false)}
+            />
           )}
-
         </div>
-        
+
         {/* Separate Spotify Player module below the main pane */}
         <SpotifyPlayer />
       </div>
-
 
       {/* Touch Mobile Drawer Sheet Details (Dynamic sliding panel) */}
       {showMobileDrawer && selectedItem && (
@@ -491,7 +295,7 @@ export default function App() {
             <div className="drawer-drag-handle" onClick={() => setShowMobileDrawer(false)}></div>
             <div className="drawer-content">
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-                <button 
+                <button
                   onClick={() => setShowMobileDrawer(false)}
                   style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
                 >
@@ -511,7 +315,6 @@ export default function App() {
 
       {/* Floating Micro-Toasts */}
       <Toast toasts={toasts} setToasts={setToasts} />
-
     </div>
   );
 }
