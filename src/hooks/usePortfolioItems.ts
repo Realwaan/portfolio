@@ -34,7 +34,20 @@ export function usePortfolioItems(repos: any[]) {
       });
     });
 
-    // 3. Academic Courses
+    // 3. Academic & Project Timeline
+    fallbackProfileData.timeline.forEach((event) => {
+      items.push({
+        id: `timeline-${event.id}`,
+        name: event.title,
+        subtitle: `${event.date} · ${event.institution}`,
+        category: 'timeline',
+        badge: event.status,
+        iconName: event.iconName,
+        rawItem: event,
+      });
+    });
+
+    // 4. Academic Courses
     items.push({
       id: 'course-overview',
       name: 'BSCS Curriculum Roadmap',
@@ -57,7 +70,7 @@ export function usePortfolioItems(repos: any[]) {
       });
     });
 
-    // 4. Skills
+    // 5. Skills
     fallbackProfileData.skills.forEach((skill) => {
       items.push({
         id: `skill-${skill.name}`,
@@ -70,7 +83,7 @@ export function usePortfolioItems(repos: any[]) {
       });
     });
 
-    // 5. Navigation & Contacts
+    // 6. Navigation & Contacts
     items.push(
       {
         id: 'nav-email',
@@ -108,6 +121,7 @@ export function usePortfolioItems(repos: any[]) {
     const counts: Record<string, number> = {
       welcome: 0,
       project: 0,
+      timeline: 0,
       course: 0,
       skill: 0,
       navigation: 0,

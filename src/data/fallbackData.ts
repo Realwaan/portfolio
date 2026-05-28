@@ -30,6 +30,19 @@ export interface AcademicCourse {
   semester: string;
 }
 
+export interface TimelineEvent {
+  id: string;
+  date: string;
+  title: string;
+  institution: string;
+  description: string;
+  type: 'academic' | 'project' | 'personal';
+  status: 'Completed' | 'In Progress' | 'Upcoming';
+  iconName: string;
+  associatedId?: string;
+  linkUrl?: string;
+}
+
 export interface ProfileData {
   name: string;
   title: string;
@@ -46,6 +59,7 @@ export interface ProfileData {
   projects: Project[];
   skills: Skill[];
   courses: AcademicCourse[];
+  timeline: TimelineEvent[];
 }
 
 export const fallbackProfileData: ProfileData = {
@@ -294,5 +308,90 @@ export const fallbackProfileData: ProfileData = {
     name: c.name,
     description: c.description,
     semester: `${c.year === 1 ? '1st' : c.year === 2 ? '2nd' : c.year === 3 ? '3rd' : '4th'} Year, ${c.semester === 1 ? '1st Semester' : c.semester === 2 ? '2nd Semester' : c.semester === 3 ? 'Summer' : 'Term'}`
-  }))
+  })),
+  timeline: [
+    {
+      id: "tl-1",
+      date: "August 2025",
+      title: "Enrolled in BSCS",
+      institution: "Cebu Institute of Technology - University",
+      description: "Admitted into the College of Computer Studies. Joined the CIT-U Wildcats community as a first-year Computer Science student to pursue foundational computing and systems engineering.",
+      type: "academic",
+      status: "Completed",
+      iconName: "GraduationCap"
+    },
+    {
+      id: "tl-2",
+      date: "October 2025",
+      title: "Workspace Customization",
+      institution: "Personal Dotfiles Project",
+      description: "Created and compiled 'kessh' personal workspace configuration styles, customized stylesheets, and optimization scripts to streamline local development profiles.",
+      type: "project",
+      status: "Completed",
+      iconName: "FolderCode",
+      associatedId: "repo-fb-3"
+    },
+    {
+      id: "tl-3",
+      date: "December 2025",
+      title: "1st Semester Completed",
+      institution: "Cebu Institute of Technology - University",
+      description: "Successfully cleared the first semester of CSIT coursework. Developed structured programming models, completed key labs in C++ (CSIT 121), and analyzed hardware components (CSIT 111).",
+      type: "academic",
+      status: "Completed",
+      iconName: "Award"
+    },
+    {
+      id: "tl-4",
+      date: "February 2026",
+      title: "Launched Tihik App",
+      institution: "Personal Project",
+      description: "Designed and built 'Tihik' (frugal in Cebuano), an interactive React & TypeScript bento application for student expense tracking, budget checks, and savings simulation.",
+      type: "project",
+      status: "Completed",
+      iconName: "TrendingUp",
+      associatedId: "repo-fb-1"
+    },
+    {
+      id: "tl-5",
+      date: "March 2026",
+      title: "TTSP Web Developer",
+      institution: "The Technologian Student Publication",
+      description: "Served as a probationary Web Developer (Probee) for The Technologian Student Publication (TTSP) during the Second Semester, developing web services, handling online assets, and contributing to the publication's digital platform infrastructure.",
+      type: "project",
+      status: "Completed",
+      iconName: "Newspaper"
+    },
+    {
+      id: "tl-6",
+      date: "April 2026",
+      title: "Developed Islaweave",
+      institution: "Web Heritage Project",
+      description: "Constructed 'islaweave', an interactive CSS and SVG web canvas showcasing generative local weaving designs, visual storytelling, and traditional art grids.",
+      type: "project",
+      status: "Completed",
+      iconName: "Layout",
+      associatedId: "repo-fb-2"
+    },
+    {
+      id: "tl-7",
+      date: "May 29, 2026",
+      title: "1st Year Completed",
+      institution: "Cebu Institute of Technology - University",
+      description: "Successfully completed the first-year BSCS curriculum at Cebu Institute of Technology - University. Wrapped up all term requirements and projects in CSIT 122 (Intermediate Programming), CSIT 201 (Web Dev), and MATH 136 (Calculus).",
+      type: "academic",
+      status: "Completed",
+      iconName: "CheckSquare"
+    },
+    {
+      id: "tl-8",
+      date: "August 10, 2026",
+      title: "Sophomore Year Starts",
+      institution: "Cebu Institute of Technology - University",
+      description: "Beginning of the sophomore year (BSCS 2, 1st Semester) at CIT-U, starting advanced core modules including CSIT 221 (Data Structures and Algorithms) and CSIT 227 (OOP 1).",
+      type: "academic",
+      status: "Upcoming",
+      iconName: "Compass"
+    }
+  ]
 };

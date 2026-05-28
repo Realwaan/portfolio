@@ -25,6 +25,7 @@ export default function App() {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     welcome: true,
     project: true,
+    timeline: true,
     course: false,
     skill: true,
     navigation: true,
@@ -110,6 +111,8 @@ export default function App() {
         rawDescriptionMatch = item.rawItem.about.toLowerCase().includes(query);
       } else if (item.category === 'course' && item.rawItem?.description) {
         rawDescriptionMatch = item.rawItem.description.toLowerCase().includes(query);
+      } else if (item.category === 'timeline' && item.rawItem?.description) {
+        rawDescriptionMatch = item.rawItem.description.toLowerCase().includes(query);
       }
 
       return nameMatch || subtitleMatch || badgeMatch || rawDescriptionMatch;
@@ -172,6 +175,30 @@ export default function App() {
       } else if (action === 'Copy Email') {
         navigator.clipboard.writeText(value);
         triggerToast('Email copied to clipboard!');
+      }
+    } else if (item.category === 'timeline') {
+      if (item.rawItem.associatedId) {
+        const targetId = item.rawItem.associatedId;
+        const targetIdx = flatItemsList.findIndex((it) => it.id === targetId);
+        if (targetIdx !== -1) {
+          const targetItem = flatItemsList[targetIdx];
+          if (!expandedSections[targetItem.category]) {
+            setExpandedSections((prev) => ({ ...prev, [targetItem.category]: true }));
+          }
+          setSelectedIndex(targetIdx);
+          triggerToast(`Navigated to linked ${targetItem.category}: ${targetItem.name}`);
+          return;
+        }
+      }
+      if (item.rawItem.linkUrl) {
+        window.open(item.rawItem.linkUrl, '_blank');
+        triggerToast(`Opening milestone link...`);
+        return;
+      }
+      if (isMobile) {
+        setShowMobileDrawer(true);
+      } else {
+        triggerToast(`Selected Milestone: ${item.name}`);
       }
     } else if (item.category === 'project') {
       if (isMobile) {

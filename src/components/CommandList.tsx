@@ -8,7 +8,7 @@ interface ListItem {
   id: string;
   name: string;
   subtitle: string;
-  category: 'project' | 'skill' | 'course' | 'navigation' | 'welcome';
+  category: 'project' | 'skill' | 'course' | 'navigation' | 'welcome' | 'timeline';
   badge: string;
   iconName: string;
   rawItem: any;
@@ -48,6 +48,7 @@ export const CommandList: React.FC<CommandListProps> = ({
   const categories: { [key: string]: ListItem[] } = {
     'Welcome Profile': [],
     'GitHub Projects': [],
+    'Experience & Timeline': [],
     'Academic Modules (CIT-U)': [],
     'Technical Capabilities': [],
     'Navigation & Actions': []
@@ -56,6 +57,7 @@ export const CommandList: React.FC<CommandListProps> = ({
   const categoryMap: { [key: string]: string } = {
     'welcome': 'Welcome Profile',
     'project': 'GitHub Projects',
+    'timeline': 'Experience & Timeline',
     'course': 'Academic Modules (CIT-U)',
     'skill': 'Technical Capabilities',
     'navigation': 'Navigation & Actions'
@@ -110,6 +112,7 @@ export const CommandList: React.FC<CommandListProps> = ({
 
               return (
                 <div
+                  id={item.id}
                   key={item.id}
                   className={`list-item ${isSelected ? 'selected' : ''}`}
                   onClick={() => onItemClick(item)}

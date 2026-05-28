@@ -1,6 +1,7 @@
 import React from 'react';
-import { Star, GitFork, Calendar, Link2, Info, Copy, Check, RefreshCw, Cpu, Activity, Terminal, ExternalLink, BookOpen, StickyNote } from 'lucide-react';
-import type { Project, Skill, AcademicCourse } from '../data/fallbackData';
+import { Star, GitFork, Calendar, Link2, Info, Copy, Check, RefreshCw, Cpu, Activity, Terminal, ExternalLink, BookOpen, StickyNote, Clock, ArrowRight } from 'lucide-react';
+import { fallbackProfileData } from '../data/fallbackData';
+import type { Project, Skill, AcademicCourse, TimelineEvent } from '../data/fallbackData';
 import { CurriculumRoadmap } from './CurriculumRoadmap';
 import { bscsCurriculum } from '../data/curriculumData';
 import { getCourseNotes } from '../data/courseNotesData';
@@ -1045,7 +1046,7 @@ const CourseNotesView: React.FC<CourseNotesViewProps> = ({ courseCode, onSelectC
 // ====================================================
 interface DetailPanelProps {
   selectedItem: any;
-  type: 'project' | 'skill' | 'course' | 'navigation' | 'welcome';
+  type: 'project' | 'skill' | 'course' | 'navigation' | 'welcome' | 'timeline';
   onSelectCourseCode?: (code: string) => void;
 }
 
@@ -1295,6 +1296,123 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedItem, type, on
               <span style={{ color: 'var(--text-muted)' }}>Destination URI:</span>
               <span style={{ wordBreak: 'break-all', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>{selectedItem.value}</span>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'timeline') {
+    const activeEvent = selectedItem as TimelineEvent;
+    const allEvents = fallbackProfileData.timeline || [];
+    const completedCount = allEvents.filter(e => e.status === 'Completed').length;
+    const progressPercent = Math.round((completedCount / allEvents.length) * 100);
+
+    return (
+      <div className="detail-pane">
+        <div className="detail-header">
+          <div className="detail-category">{activeEvent.type} milestone</div>
+          <h2 className="detail-title">{activeEvent.title}</h2>
+          <p className="detail-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Clock size={13} style={{ opacity: 0.6 }} />
+            {activeEvent.date} · {activeEvent.institution}
+          </p>
+        </div>
+
+        <div className="detail-body">
+          {/* Milestone Details Card */}
+          <div className="notion-callout" style={{ 
+            borderLeftColor: activeEvent.status === 'Completed' ? '#10b981' : activeEvent.status === 'In Progress' ? 'var(--accent-color)' : 'var(--border-color)', 
+            margin: '0 0 20px 0',
+            boxSizing: 'border-box'
+          }}>
+            <div className="notion-callout-icon">
+              {activeEvent.status === 'Completed' ? '✅' : activeEvent.status === 'In Progress' ? '⚡' : '⏳'}
+            </div>
+            <div className="notion-callout-content">
+              <span className={`notion-badge status-${activeEvent.status.toLowerCase().replace(' ', '-')}`} style={{ marginBottom: '8px' }}>
+                {activeEvent.status}
+              </span>
+              <p style={{ margin: '4px 0 0 0', fontSize: '13px', lineHeight: '1.5', color: 'var(--text-main)' }}>
+                {activeEvent.description}
+              </p>
+            </div>
+          </div>
+
+          {/* Interactive Redirection or Navigation Shortcut */}
+          {activeEvent.associatedId && (
+            <div style={{ marginBottom: '24px' }}>
+              <div className="detail-section-title">Linked Portfolio Item</div>
+              <button
+                className="timeline-card-link-btn"
+                onClick={() => {
+                  const targetElement = document.getElementById(activeEvent.associatedId || '');
+                  if (targetElement) {
+                    targetElement.click();
+                  }
+                }}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <ArrowRight size={13} />
+                <span>Inspect Linked Asset ({activeEvent.associatedId.startsWith('repo-') ? 'Repository' : 'Academic notes'})</span>
+              </button>
+            </div>
+          )}
+
+          {/* Entire Journey Progress Bar */}
+          <div className="timeline-progress-section">
+            <div className="timeline-progress-header">
+              <span>Wildcat Roadmap Progress</span>
+              <span className="timeline-progress-percentage">{progressPercent}% Completed</span>
+            </div>
+            <div className="timeline-progress-bar-container">
+              <div className="timeline-progress-bar-fill" style={{ width: `${progressPercent}%` }}></div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-dimmed)', marginTop: '6px' }}>
+              <span>Start (Aug 2025)</span>
+              <span>{completedCount} of {allEvents.length} Milestones Cleared</span>
+              <span>Sophomore Year (Aug 2026)</span>
+            </div>
+          </div>
+
+          {/* Timeline Visual Track */}
+          <div className="detail-section-title">Full Milestone Journey</div>
+          <div className="timeline-track-container">
+            <div className="timeline-vertical-line"></div>
+            
+            {allEvents.map((event) => {
+              const isSelected = event.id === activeEvent.id;
+              const wrapperClass = `timeline-event-wrapper ${event.status.toLowerCase().replace(' ', '-')} ${isSelected ? 'selected' : ''}`;
+              
+              return (
+                <div 
+                  key={event.id} 
+                  className={wrapperClass}
+                  onClick={() => {
+                    const listElement = document.getElementById(`timeline-${event.id}`);
+                    if (listElement) {
+                      listElement.click();
+                    }
+                  }}
+                >
+                  <div className="timeline-event-node"></div>
+                  <div className="timeline-card">
+                    <div className="timeline-card-header">
+                      <div className="timeline-card-title-row">
+                        <span className="timeline-card-title">{event.title}</span>
+                        <span className="timeline-card-date">{event.date}</span>
+                      </div>
+                      <span className={`timeline-card-badge status-${event.status.toLowerCase().replace(' ', '-')}`}>
+                        {event.status}
+                      </span>
+                    </div>
+                    {isSelected && (
+                      <p className="timeline-card-description">{event.description}</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
