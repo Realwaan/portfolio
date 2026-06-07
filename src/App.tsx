@@ -91,7 +91,7 @@ export default function App() {
   }, []);
 
   // Trigger toast utility
-  const triggerToast = (message: string) => {
+  function triggerToast(message: string) {
     const newToast: ToastItem = {
       id: String(Date.now()),
       message,
@@ -103,7 +103,7 @@ export default function App() {
       }
       return next;
     });
-  };
+  }
 
   // Switch accent theme
   const handleAccentChange = (newAccent: 'raycast-red' | 'cit-gold' | 'cit-maroon') => {

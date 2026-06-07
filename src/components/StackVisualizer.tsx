@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Cpu, Activity, Play, Pause, RotateCcw, ChevronLeft, ChevronRight, Edit3, Terminal, CheckCircle, AlertTriangle } from 'lucide-react';
 
+type CValue = string | number | boolean | undefined;
+
 interface Variable {
   name: string;
   type: string;
-  val: string | number | boolean | undefined;
+  val: CValue;
   address: string;
 }
 
@@ -20,8 +22,8 @@ interface Frame {
 interface Step {
   line: number;
   stack: string[];
-  variables: Record<string, string | number | boolean | undefined>;
-  memory: Record<string, { name: string; val: string | number | boolean | undefined; frameIndex: number }>;
+  variables: Record<string, CValue>;
+  memory: Record<string, { name: string; val: CValue; frameIndex: number }>;
   console: string;
 }
 
@@ -42,8 +44,8 @@ function parseParam(paramStr: string) {
 function evaluateCExpr(
   expr: string,
   frameVars: Record<string, Variable>,
-  memory: Record<string, { name: string; val: string | number | boolean | undefined; frameIndex: number }>
-): string | number | boolean | undefined {
+  memory: Record<string, { name: string; val: CValue; frameIndex: number }>
+): CValue {
   let sanitized = expr.trim();
 
   // 1. Handle address-of: &x
@@ -96,8 +98,8 @@ function evaluateCExpr(
   try {
     const val = Function(`"use strict"; return (${sanitized});`)();
     return val;
-  } catch (err: any) {
-    throw new Error(`Mathematical evaluation failed for: ${sanitized}`);
+  } catch (err) {
+    throw new Error(`Mathematical evaluation failed for: ${sanitized}`, { cause: err });
   }
 }
 
@@ -105,13 +107,14 @@ function evaluateCExpr(
 function evaluateCondition(
   condStr: string,
   frameVars: Record<string, Variable>,
-  memory: Record<string, { name: string; val: any; frameIndex: number }>
+  memory: Record<string, { name: string; val: CValue; frameIndex: number }>
 ): boolean {
   try {
     const val = evaluateCExpr(condStr, frameVars, memory);
     return !!val;
-  } catch (err: any) {
-    throw new Error(`Condition evaluation failed: ${err.message}`);
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    throw new Error(`Condition evaluation failed: ${errMsg}`, { cause: err });
   }
 }
 
@@ -119,7 +122,7 @@ function evaluateCondition(
 function executeUpdate(
   expr: string,
   variables: Record<string, Variable>,
-  memory: Record<string, { name: string; val: string | number | boolean | undefined; frameIndex: number }>
+  memory: Record<string, { name: string; val: CValue; frameIndex: number }>
 ) {
   const trimmed = expr.trim();
   if (trimmed.endsWith('++')) {
@@ -362,7 +365,7 @@ function parseCustomCode(codeStr: string): { steps: Step[]; codeLines: string[];
   // 3. Execution Simulation Loop
   const steps: Step[] = [];
   const callStack: Frame[] = [];
-  const memory: Record<string, { name: string; val: any; frameIndex: number }> = {};
+  const memory: Record<string, { name: string; val: CValue; frameIndex: number }> = {};
   let addressCounter = 0x7ffcd0;
   let consoleLog = "Starting program...\n";
   
@@ -397,7 +400,7 @@ function parseCustomCode(codeStr: string): { steps: Step[]; codeLines: string[];
       return `${f.name}(${params})`;
     });
 
-    const uiVariables: Record<string, any> = {};
+    const uiVariables: Record<string, CValue> = {};
     for (const name in currentFrame.variables) {
       uiVariables[name] = currentFrame.variables[name].val;
     }
@@ -444,8 +447,9 @@ function parseCustomCode(codeStr: string): { steps: Step[]; codeLines: string[];
             consoleLog += `\nLine ${ip + 1}: condition "${jump.condStr}" is false. Skipping statement.`;
             ip = jump.endLine + 1;
           }
-        } catch (err: any) {
-          return { steps: [], codeLines, error: `Line ${ip + 1}: ${err.message}` };
+        } catch (err) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          return { steps: [], codeLines, error: `Line ${ip + 1}: ${errMsg}` };
         }
         continue;
       }
@@ -464,8 +468,9 @@ function parseCustomCode(codeStr: string): { steps: Step[]; codeLines: string[];
               ip = jump.endLine + 1;
             }
           }
-        } catch (err: any) {
-          return { steps: [], codeLines, error: `Line ${ip + 1}: ${err.message}` };
+        } catch (err) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          return { steps: [], codeLines, error: `Line ${ip + 1}: ${errMsg}` };
         }
         continue;
       }
@@ -495,8 +500,9 @@ function parseCustomCode(codeStr: string): { steps: Step[]; codeLines: string[];
             consoleLog += `\nLine ${ip + 1}: while condition "${jump.condStr}" is false. Exiting loop.`;
             ip = jump.endLine + 1;
           }
-        } catch (err: any) {
-          return { steps: [], codeLines, error: `Line ${ip + 1}: ${err.message}` };
+        } catch (err) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          return { steps: [], codeLines, error: `Line ${ip + 1}: ${errMsg}` };
         }
         continue;
       }
@@ -559,8 +565,9 @@ function parseCustomCode(codeStr: string): { steps: Step[]; codeLines: string[];
             currentFrame.loopInitMap[ip] = false;
             ip = jump.endLine + 1;
           }
-        } catch (err: any) {
-          return { steps: [], codeLines, error: `Line ${ip + 1}: ${err.message}` };
+        } catch (err) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          return { steps: [], codeLines, error: `Line ${ip + 1}: ${errMsg}` };
         }
         continue;
       }
@@ -572,8 +579,9 @@ function parseCustomCode(codeStr: string): { steps: Step[]; codeLines: string[];
           executeUpdate(loopHeader.updateStr!, currentFrame.variables, memory);
           consoleLog += `\n[Loop Update]: Executed ${loopHeader.updateStr}`;
           ip = startLine;
-        } catch (err: any) {
-          return { steps: [], codeLines, error: `Line ${ip + 1}: ${err.message}` };
+        } catch (err) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          return { steps: [], codeLines, error: `Line ${ip + 1}: ${errMsg}` };
         }
         continue;
       }
@@ -597,8 +605,9 @@ function parseCustomCode(codeStr: string): { steps: Step[]; codeLines: string[];
             }
             return match;
           });
-        } catch (err: any) {
-          return { steps: [], codeLines, error: `Line ${ip + 1}: ${err.message}` };
+        } catch (err) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          return { steps: [], codeLines, error: `Line ${ip + 1}: ${errMsg}` };
         }
       }
       formatted = formatted.replace(/\\n/g, '\n').replace(/\\t/g, '\t');
@@ -611,13 +620,14 @@ function parseCustomCode(codeStr: string): { steps: Step[]; codeLines: string[];
     const returnMatch = line.match(/^return\s*(.*)\s*;?$/);
     if (returnMatch) {
       const retExpr = returnMatch[1].trim().replace(/;$/, '');
-      let retVal: any = undefined;
+      let retVal: CValue = undefined;
       
       if (retExpr !== '') {
         try {
           retVal = evaluateCExpr(retExpr, currentFrame.variables, memory);
-        } catch (err: any) {
-          return { steps: [], codeLines, error: `Line ${ip + 1}: ${err.message}` };
+        } catch (err) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          return { steps: [], codeLines, error: `Line ${ip + 1}: ${errMsg}` };
         }
       }
 
@@ -690,14 +700,15 @@ function parseCustomCode(codeStr: string): { steps: Step[]; codeLines: string[];
           
           if (calledFuncName in functions) {
             const targetFunc = functions[calledFuncName];
-            const evaluatedArgs: any[] = [];
+            const evaluatedArgs: CValue[] = [];
             if (argsStr.trim() !== '') {
               const argExprs = argsStr.split(',');
               for (const expr of argExprs) {
                 try {
                   evaluatedArgs.push(evaluateCExpr(expr, currentFrame.variables, memory));
-                } catch (err: any) {
-                  return { steps: [], codeLines, error: `Line ${ip + 1}: ${err.message}` };
+                } catch (err) {
+                  const errMsg = err instanceof Error ? err.message : String(err);
+                  return { steps: [], codeLines, error: `Line ${ip + 1}: ${errMsg}` };
                 }
               }
             }
@@ -734,8 +745,9 @@ function parseCustomCode(codeStr: string): { steps: Step[]; codeLines: string[];
             currentFrame.variables[varName] = { name: varName, type: varType, val, address: addr };
             memory[addr] = { name: varName, val, frameIndex: callStack.length - 1 };
             consoleLog += `\nLine ${ip + 1}: Allocated ${varType} ${varName} = ${val}`;
-          } catch (err: any) {
-            return { steps: [], codeLines, error: `Line ${ip + 1}: ${err.message}` };
+          } catch (err) {
+            const errMsg = err instanceof Error ? err.message : String(err);
+            return { steps: [], codeLines, error: `Line ${ip + 1}: ${errMsg}` };
           }
         }
       } else {
@@ -762,14 +774,15 @@ function parseCustomCode(codeStr: string): { steps: Step[]; codeLines: string[];
         
         if (calledFuncName in functions) {
           const targetFunc = functions[calledFuncName];
-          const evaluatedArgs: any[] = [];
+          const evaluatedArgs: CValue[] = [];
           if (argsStr.trim() !== '') {
             const argExprs = argsStr.split(',');
             for (const expr of argExprs) {
               try {
                 evaluatedArgs.push(evaluateCExpr(expr, currentFrame.variables, memory));
-              } catch (err: any) {
-                return { steps: [], codeLines, error: `Line ${ip + 1}: ${err.message}` };
+              } catch (err) {
+                const errMsg = err instanceof Error ? err.message : String(err);
+                return { steps: [], codeLines, error: `Line ${ip + 1}: ${errMsg}` };
               }
             }
           }
@@ -830,8 +843,9 @@ function parseCustomCode(codeStr: string): { steps: Step[]; codeLines: string[];
               return { steps: [], codeLines, error: `Line ${ip + 1}: Variable '${lhs}' is not defined.` };
             }
           }
-        } catch (err: any) {
-          return { steps: [], codeLines, error: `Line ${ip + 1}: ${err.message}` };
+        } catch (err) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          return { steps: [], codeLines, error: `Line ${ip + 1}: ${errMsg}` };
         }
       }
       ip++;
@@ -846,14 +860,15 @@ function parseCustomCode(codeStr: string): { steps: Step[]; codeLines: string[];
       
       if (calledFuncName in functions) {
         const targetFunc = functions[calledFuncName];
-        const evaluatedArgs: any[] = [];
+        const evaluatedArgs: CValue[] = [];
         if (argsStr.trim() !== '') {
           const argExprs = argsStr.split(',');
           for (const expr of argExprs) {
             try {
               evaluatedArgs.push(evaluateCExpr(expr, currentFrame.variables, memory));
-            } catch (err: any) {
-              return { steps: [], codeLines, error: `Line ${ip + 1}: ${err.message}` };
+            } catch (err) {
+              const errMsg = err instanceof Error ? err.message : String(err);
+              return { steps: [], codeLines, error: `Line ${ip + 1}: ${errMsg}` };
             }
           }
         }
