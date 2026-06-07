@@ -1,15 +1,17 @@
 /* App Background Graphics */
 .app-container {
   position: relative;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow-y: auto;
-  padding: 40px 20px;
+  overflow: hidden;
+  padding: 0;
   box-sizing: border-box;
-  background: radial-gradient(circle at 50% 50%, var(--bg-app), var(--bg-color));
+  background: 
+    radial-gradient(circle at 85% 85%, rgba(var(--accent-rgb), 0.04) 0%, transparent 55%),
+    radial-gradient(circle at 50% 50%, var(--bg-app), var(--bg-color));
 }
 
 .app-container::before {
@@ -19,12 +21,38 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 24px 24px;
   background-position: center;
   pointer-events: none;
+}
+
+/* Pulsing Ambient Spotlight in Top-Left */
+.app-container::after {
+  content: '';
+  position: absolute;
+  width: 50vw;
+  height: 50vw;
+  max-width: 600px;
+  max-height: 600px;
+  top: -150px;
+  left: 10%;
+  background: radial-gradient(circle, rgba(var(--accent-rgb), 0.07) 0%, rgba(var(--accent-rgb), 0.02) 50%, transparent 70%);
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 1;
+  animation: pulseSpotlight 10s infinite ease-in-out;
+}
+
+@keyframes pulseSpotlight {
+  0%, 100% {
+    transform: scale(1) translate(0, 0);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.15) translate(40px, -20px);
+    opacity: 1;
+  }
 }
 
 /* Portfolio Wrapper for stacking main window and accessory modules */
@@ -41,13 +69,22 @@
   animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.portfolio-content-row {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: center;
+}
+
 /* Raycast Desktop Container Window */
 .raycast-window {
   width: 100%;
   height: 520px;
   background-color: var(--bg-palette);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   box-shadow: var(--shadow-main), var(--shadow-glow);
@@ -61,7 +98,7 @@
 
 .raycast-window:focus-within {
   border-color: var(--border-focus);
-  box-shadow: var(--shadow-main), 0 0 0 1px rgba(var(--accent-rgb), 0.2), var(--shadow-glow);
+  box-shadow: var(--shadow-main), 0 0 0 2px rgba(var(--accent-rgb), 0.15), var(--shadow-glow);
 }
 
 /* Palette Search Input Bar */
@@ -219,21 +256,173 @@
   width: 90%;
 }
 
-/* Responsive Media Queries */
+/* Desktop Map & Search Side-by-Side Floating Layout */
+@media (min-width: 1101px) {
+  .portfolio-wrapper {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    margin: 0;
+    z-index: 10;
+    width: auto;
+    max-width: 1020px;
+  }
+
+  .portfolio-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .left-column {
+    width: 680px;
+    flex: 0 0 680px;
+  }
+
+  .right-column {
+    width: 320px;
+    flex: 0 0 320px;
+  }
+  
+  .raycast-window {
+    height: 520px;
+    width: 100%;
+  }
+
+  .spotify-player-wrapper {
+    width: 100%;
+  }
+
+  .pomodoro-timer-wrapper {
+    width: 100%;
+  }
+
+  .visualizer-widget-wrapper {
+    width: 100%;
+  }
+
+  /* Specific rules for Visualizer inside Sidebar */
+  .visualizer-bento-card .visualizer-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+    gap: 12px;
+  }
+
+  .visualizer-bento-card .code-sim-box {
+    height: 140px;
+  }
+
+  .visualizer-bento-card .visualizer-right-pane {
+    height: 200px;
+  }
+
+  .visualizer-bento-card .visualizer-controls-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .visualizer-bento-card .visualizer-btn-group {
+    justify-content: space-between;
+  }
+
+  .visualizer-bento-card .visualizer-btn {
+    flex: 1;
+    justify-content: center;
+    font-size: 10px;
+    padding: 4px 0;
+  }
+}
+
+/* Tablet Layout (between 861px and 1100px) */
+@media (max-width: 1100px) and (min-width: 861px) {
+  .portfolio-wrapper {
+    position: relative;
+    width: 90%;
+    max-width: 650px;
+    margin: 20px auto;
+    z-index: 10;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .portfolio-column {
+    display: contents;
+  }
+  
+  .raycast-window {
+    grid-column: 1 / span 2;
+    width: 100%;
+    height: 520px;
+  }
+  
+  .spotify-player-wrapper {
+    grid-column: 1;
+    width: 100%;
+  }
+  
+  .pomodoro-timer-wrapper {
+    grid-column: 2;
+    width: 100%;
+  }
+  
+  .visualizer-widget-wrapper {
+    display: none; /* Hide visualizer widget card on tablet/mobile */
+  }
+
+  .app-container {
+    overflow-y: auto;
+    height: 100%;
+    padding: 20px 0;
+  }
+}
+
+/* Mobile Layout (< 860px) */
 @media (max-width: 860px) {
   .portfolio-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     width: 95%;
     max-width: 650px;
     margin: 20px auto;
+    z-index: 10;
   }
 
+  .portfolio-column {
+    display: contents;
+  }
+  
   .raycast-window {
     width: 100%;
     height: 500px;
   }
-
+  
   .palette-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .spotify-player-wrapper {
+    width: 100%;
+  }
+  
+  .pomodoro-timer-wrapper {
+    width: 100%;
+  }
+  
+  .visualizer-widget-wrapper {
+    display: none; /* Hide visualizer widget card on mobile */
+  }
+
+  .app-container {
+    overflow-y: auto;
+    height: 100%;
+    padding: 20px 0;
   }
 }
 
@@ -242,7 +431,7 @@
     width: 100%;
     max-width: 100%;
     margin: 0;
-    gap: 16px;
+    gap: 12px;
     padding: 0 0 24px 0;
     height: auto;
   }
@@ -266,3 +455,120 @@
     font-size: 15px;
   }
 }
+
+/* Standalone Visualizer Bento Card Styling */
+.visualizer-bento-card {
+  background-color: var(--bg-palette);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow-main), var(--shadow-glow);
+  padding: 12px 14px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.visualizer-bento-card:hover,
+.visualizer-bento-card:focus-within {
+  border-color: rgba(var(--accent-rgb), 0.25);
+  box-shadow: var(--shadow-main), 0 0 0 2px rgba(var(--accent-rgb), 0.15), var(--shadow-glow);
+}
+
+.visualizer-bento-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 6px;
+}
+
+.visualizer-bento-category {
+  font-size: 7.5px;
+  font-weight: 600;
+  color: var(--text-dimmed);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.visualizer-bento-title {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* Mini Stack Preview Widget */
+.mini-stack-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.mini-stack-frame {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.015);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  transition: all 0.2s ease;
+}
+
+.mini-stack-frame.top-frame {
+  border-color: rgba(var(--accent-rgb), 0.35);
+  background: rgba(var(--accent-rgb), 0.06);
+  box-shadow: 0 0 8px -2px rgba(var(--accent-rgb), 0.2);
+}
+
+.mini-stack-frame.top-frame .mini-frame-name {
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+.mini-frame-name {
+  color: var(--text-main);
+}
+
+.mini-frame-vars {
+  color: var(--text-dimmed);
+  font-size: 9px;
+}
+
+.mini-stack-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  background: rgba(var(--accent-rgb), 0.08);
+  border: 1px solid rgba(var(--accent-rgb), 0.18);
+  border-radius: 6px;
+  padding: 6px;
+  color: var(--accent-color);
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.visualizer-bento-card.interactive:hover .mini-stack-frame {
+  transform: translateY(-2px);
+}
+
+.visualizer-bento-card.interactive:hover .mini-stack-cta {
+  background: var(--accent-color);
+  color: var(--bg-palette);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.4);
+}
+
+

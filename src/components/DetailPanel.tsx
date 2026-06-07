@@ -7,6 +7,7 @@ import { bscsCurriculum } from '../data/curriculumData';
 import { getCourseNotes } from '../data/courseNotesData';
 import { NotionBlockRenderer } from './NotionBlockRenderer';
 import { useNotionNotes } from '../hooks/useNotionNotes';
+import { StackVisualizer } from './StackVisualizer';
 import './DetailPanel.css';
 import './ShowcaseWidgets.css';
 
@@ -1040,13 +1041,12 @@ const CourseNotesView: React.FC<CourseNotesViewProps> = ({ courseCode, onSelectC
 
 // Description editing functionality removed - descriptions are static
 
-
 // ====================================================
 // MAIN COMPONENT: DetailPanel
 // ====================================================
 interface DetailPanelProps {
   selectedItem: any;
-  type: 'project' | 'skill' | 'course' | 'navigation' | 'welcome' | 'timeline';
+  type: 'project' | 'skill' | 'course' | 'navigation' | 'welcome' | 'timeline' | 'map';
   onSelectCourseCode?: (code: string) => void;
 }
 
@@ -1073,6 +1073,21 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedItem, type, on
             }
           }}
         />
+      );
+    }
+
+    if (selectedItem.code === 'VISUALIZER') {
+      return (
+        <div className="detail-pane stack-visualizer-detail">
+          <div className="detail-header">
+            <div className="detail-category">Computer Science Sandbox</div>
+            <h2 className="detail-title">CS Stack Visualizer Lab</h2>
+            <p className="detail-subtitle">Simulate pointer memory & recursion stacks line-by-line</p>
+          </div>
+          <div className="detail-body">
+            <StackVisualizer />
+          </div>
+        </div>
       );
     }
 
@@ -1414,6 +1429,106 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedItem, type, on
               );
             })}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'map') {
+    const sheet = selectedItem;
+    if (!sheet) return null;
+
+    const isOwned = sheet.library_owns === 'Yes';
+    
+    // Quick copy command helper
+    const handleCopyCall = () => {
+      if (sheet.call_number) {
+        navigator.clipboard.writeText(sheet.call_number);
+        window.dispatchEvent(new CustomEvent('trigger-toast', {
+          detail: { message: `Call number ${sheet.call_number} copied to clipboard!` }
+        }));
+      }
+    };
+
+    return (
+      <div className="detail-pane map-sheet-detail">
+        <div className="detail-header">
+          <div className="detail-category">Philippines 1:50k Topographic Sheet</div>
+          <h2 className="detail-title">Sheet {sheet.sheet_no}</h2>
+          <p className="detail-subtitle">{sheet.sheet_name}</p>
+        </div>
+
+        <div className="detail-body">
+          {/* Metadata Card */}
+          <div className="notion-callout" style={{ 
+            borderLeftColor: isOwned ? '#10b981' : 'var(--border-color)', 
+            margin: '0 0 20px 0',
+            boxSizing: 'border-box'
+          }}>
+            <div className="notion-callout-icon">
+              {isOwned ? '📚' : '⚠️'}
+            </div>
+            <div className="notion-callout-content">
+              <span className={`notion-badge ${isOwned ? 'status-completed' : 'status-upcoming'}`} style={{ marginBottom: '8px' }}>
+                {isOwned ? 'Owned by Library' : 'Not Owned by Library'}
+              </span>
+              <p style={{ margin: '4px 0 0 0', fontSize: '13px', lineHeight: '1.5', color: 'var(--text-main)' }}>
+                {isOwned 
+                  ? `This sheet is available in the library at location: ${sheet.library_location || 'Map Room'}.` 
+                  : 'This sheet is not currently owned by the library database.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="detail-section-title">Catalog Information</div>
+          <div className="stats-row" style={{ flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Series:</span>
+              <span>{sheet.series || 'Series 733 (NAMRIA)'}</span>
+            </div>
+            {sheet.call_number && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Call Number:</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <code className="font-mono" style={{ background: 'rgba(255,255,255,0.04)', padding: '2px 4px', borderRadius: '4px' }}>
+                    {sheet.call_number}
+                  </code>
+                  <button 
+                    onClick={handleCopyCall}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px' }}
+                    title="Copy Call Number"
+                  >
+                    <Copy size={12} />
+                  </button>
+                </span>
+              </div>
+            )}
+            {sheet.bounds && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Bounding Coordinates:</span>
+                <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', textAlign: 'right' }}>
+                  {sheet.bounds.min_lon.toFixed(3)}°E to {sheet.bounds.max_lon.toFixed(3)}°E<br/>
+                  {sheet.bounds.min_lat.toFixed(3)}°N to {sheet.bounds.max_lat.toFixed(3)}°N
+                </span>
+              </div>
+            )}
+          </div>
+
+          {sheet.scan && sheet.scan !== 'NONE' && (
+            <>
+              <div className="detail-section-title">NAMRIA Digital Map Scan</div>
+              <a
+                href={sheet.scan}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="skill-doc-link"
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderRadius: '6px', backgroundColor: 'rgba(var(--accent-rgb), 0.08)', color: 'var(--accent-color)', border: '1px solid rgba(var(--accent-rgb), 0.15)', textDecoration: 'none', fontSize: '13px', fontWeight: 600, transition: 'all 0.2s ease' }}
+              >
+                <ExternalLink size={14} />
+                <span>Open Digital Map Scan Page</span>
+              </a>
+            </>
+          )}
         </div>
       </div>
     );

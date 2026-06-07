@@ -8,7 +8,7 @@ interface ListItem {
   id: string;
   name: string;
   subtitle: string;
-  category: 'project' | 'skill' | 'course' | 'navigation' | 'welcome' | 'timeline';
+  category: 'project' | 'skill' | 'course' | 'navigation' | 'welcome' | 'timeline' | 'map';
   badge: string;
   iconName: string;
   rawItem: any;
@@ -51,6 +51,7 @@ export const CommandList: React.FC<CommandListProps> = ({
     'Experience & Timeline': [],
     'Academic Modules (CIT-U)': [],
     'Technical Capabilities': [],
+    'Philippines 1:50k Sheets': [],
     'Navigation & Actions': []
   };
 
@@ -60,6 +61,7 @@ export const CommandList: React.FC<CommandListProps> = ({
     'timeline': 'Experience & Timeline',
     'course': 'Academic Modules (CIT-U)',
     'skill': 'Technical Capabilities',
+    'map': 'Philippines 1:50k Sheets',
     'navigation': 'Navigation & Actions'
   };
 
@@ -106,7 +108,7 @@ export const CommandList: React.FC<CommandListProps> = ({
                 </span>
               )}
             </h3>
-            {categoryItems.map((item) => {
+            {isExpanded && categoryItems.map((item) => {
               const itemIdx = items.indexOf(item);
               const isSelected = itemIdx === selectedIndex;
 

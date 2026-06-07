@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, ShieldAlert, Sparkles, X } from 'lucide-react';
+import { Search, ShieldAlert, Sparkles, X, ArrowRight } from 'lucide-react';
 import { fallbackProfileData } from './data/fallbackData';
 import { useGithubRepos } from './hooks/useGithubRepos';
 import { CommandList } from './components/CommandList';
@@ -13,6 +13,9 @@ import { WelcomeBanner } from './components/WelcomeBanner';
 import { AccentModal } from './components/AccentModal';
 import { usePortfolioItems } from './hooks/usePortfolioItems';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
+import { PHMapPanel } from './components/PHMapPanel';
+import { TerminalConsole } from './components/TerminalConsole';
+import { PomodoroTimer } from './components/PomodoroTimer';
 
 export default function App() {
   const [search, setSearch] = useState('');
@@ -22,23 +25,36 @@ export default function App() {
   const [showActionModal, setShowActionModal] = useState(false);
   const [showMobileDrawer, setShowMobileDrawer] = useState(false);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [sheets, setSheets] = useState<any[]>([]);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     welcome: true,
     project: true,
     timeline: true,
     course: false,
     skill: true,
+    map: false,
     navigation: true,
   });
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const ignoreSearchResetRef = useRef(false);
+  const [terminalMode, setTerminalMode] = useState(false);
+
+  const [showMap, setShowMap] = useState(false);
+
+  // Fetch map sheets
+  useEffect(() => {
+    fetch('/ph_map_sheets.json')
+      .then((res) => res.json())
+      .then((data) => setSheets(data))
+      .catch((err) => console.error('Failed to load map sheets:', err));
+  }, []);
 
   // Fetch GitHub projects
   const { repos, error } = useGithubRepos(fallbackProfileData.githubUsername);
 
   // Generate unified items list and counts
-  const { flatItemsList, sectionCounts } = usePortfolioItems(repos);
+  const { flatItemsList, sectionCounts } = usePortfolioItems(repos, sheets, showMap);
 
   // Focus input automatically on load and when clicking empty space
   useEffect(() => {
@@ -54,9 +70,23 @@ export default function App() {
         triggerToast(customEvent.detail.message);
       }
     };
+    const handleFocusSearch = () => {
+      searchInputRef.current?.focus();
+      triggerToast("Search panel focused.");
+    };
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === '\\') {
+        e.preventDefault();
+        setTerminalMode((prev) => !prev);
+      }
+    };
     window.addEventListener('trigger-toast', handleCustomToast);
+    window.addEventListener('focus-search-input', handleFocusSearch);
+    window.addEventListener('keydown', handleGlobalKeyDown);
     return () => {
       window.removeEventListener('trigger-toast', handleCustomToast);
+      window.removeEventListener('focus-search-input', handleFocusSearch);
+      window.removeEventListener('keydown', handleGlobalKeyDown);
     };
   }, []);
 
@@ -162,6 +192,37 @@ export default function App() {
     }
   };
 
+  // Handle map sheet selections from the map panel
+  const handleSelectMapSheet = (sheetNo: string) => {
+    const targetId = `map-${sheetNo}`;
+    const isMapExpanded = expandedSections.map;
+
+    if (!isMapExpanded) {
+      setExpandedSections((prev) => ({ ...prev, map: true }));
+    }
+
+    const isMobile = window.innerWidth <= 860;
+
+    if (search.trim() || !isMapExpanded) {
+      ignoreSearchResetRef.current = true;
+      setSearch('');
+      setExpandedSections((prev) => ({ ...prev, map: true }));
+      const targetIdxInFlat = flatItemsList.findIndex((item) => item.id === targetId);
+      if (targetIdxInFlat !== -1) {
+        setSelectedIndex(targetIdxInFlat);
+      }
+    } else {
+      const targetIdxInFiltered = filteredItems.findIndex((item) => item.id === targetId);
+      if (targetIdxInFiltered !== -1) {
+        setSelectedIndex(targetIdxInFiltered);
+      }
+    }
+
+    if (isMobile) {
+      setShowMobileDrawer(true);
+    }
+  };
+
   // Perform navigation or details operations
   const executeItemAction = (item: ListItem) => {
     const isMobile = window.innerWidth <= 860;
@@ -175,6 +236,17 @@ export default function App() {
       } else if (action === 'Copy Email') {
         navigator.clipboard.writeText(value);
         triggerToast('Email copied to clipboard!');
+      } else if (value === 'EXPORT_RESUME') {
+        triggerToast('Preparing PDF Resume for print...');
+        setTimeout(() => {
+          window.print();
+        }, 300);
+      } else if (value === 'TOGGLE_MAP') {
+        setShowMap((prev) => {
+          const next = !prev;
+          triggerToast(next ? 'Interactive map background shown.' : 'Interactive map background hidden.');
+          return next;
+        });
       }
     } else if (item.category === 'timeline') {
       if (item.rawItem.associatedId) {
@@ -237,82 +309,163 @@ export default function App() {
         Marc Andrei Regulacion | BS Computer Science Student Portfolio
       </h1>
 
+      {/* Full-screen background map */}
+      {showMap && (
+        <PHMapPanel
+          sheets={sheets}
+          selectedItem={selectedItem}
+          searchQuery={search}
+          onSelectSheet={handleSelectMapSheet}
+          accent={accent}
+        />
+      )}
+
       {/* Welcome Guide Info Panel */}
       {showWelcome && <WelcomeBanner onClose={() => setShowWelcome(false)} />}
 
       {/* Main Raycast Window Box & Spotify Bento Module */}
       <div className="portfolio-wrapper" onClick={(e) => e.stopPropagation()}>
-        <div className="raycast-window">
-          {/* Search header bar */}
-          <div className="search-bar-container">
-            <Search size={18} className="search-icon" />
-            <input
-              ref={searchInputRef}
-              type="text"
-              className="search-input"
-              placeholder="Search projects, academics, skills, or contact info..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              aria-label="Command search"
-            />
-            {error && (
-              <div className="active-accent-indicator" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.25)', color: '#ef4444' }}>
-                <ShieldAlert size={11} style={{ marginRight: 2 }} /> Fallback Mode
-              </div>
-            )}
-            <div className="active-accent-indicator">
-              {accent === 'cit-gold' ? 'Wildcats' : 'Classic'}
-            </div>
+        <div className="portfolio-column left-column">
+          <div className="raycast-window">
+              {terminalMode ? (
+                <TerminalConsole 
+                  onClose={() => setTerminalMode(false)}
+                  accent={accent}
+                  onThemeChange={(newAccent) => handleAccentChange(newAccent)}
+                  projects={repos}
+                />
+              ) : (
+                <>
+                  {/* Search header bar */}
+                  <div className="search-bar-container">
+                    <Search size={18} className="search-icon" />
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      className="search-input"
+                      placeholder="Search projects, academics, skills, or contact info..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      aria-label="Command search"
+                    />
+                    {error && (
+                      <div className="active-accent-indicator" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.25)', color: '#ef4444' }}>
+                        <ShieldAlert size={11} style={{ marginRight: 2 }} /> Fallback Mode
+                      </div>
+                    )}
+                    <div className="active-accent-indicator">
+                      {accent === 'cit-gold' ? 'Wildcats' : 'Classic'}
+                    </div>
+                  </div>
+
+                  {/* Dual pane list & details */}
+                  <div className="palette-grid">
+                    {filteredItems.length === 0 ? (
+                      <div className="empty-state">
+                        <Sparkles size={36} />
+                        <div className="empty-state-title">No results found</div>
+                        <p className="empty-state-desc">No extension modules match "{search}". Try searching for projects, skills, or CIT courses.</p>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Left List */}
+                        <CommandList
+                          items={filteredItems}
+                          selectedIndex={selectedIndex}
+                          onItemClick={executeItemAction}
+                          onHoverItem={(index) => setSelectedIndex(index)}
+                          expandedSections={expandedSections}
+                          onToggleSection={(category) => setExpandedSections((prev) => ({ ...prev, [category]: !prev[category] }))}
+                          sectionCounts={sectionCounts}
+                          isSearching={!!search.trim()}
+                        />
+
+                        {/* Right Detail Pane */}
+                        <DetailPanel
+                          key={selectedItem ? `${selectedItem.category}-${selectedItem.id}` : 'empty'}
+                          selectedItem={selectedItem?.rawItem}
+                          type={selectedItem?.category}
+                          onSelectCourseCode={handleSelectCourseCode}
+                        />
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Actions Footer Bar */}
+              <ActionPanel 
+                onActionClick={() => setShowActionModal(true)} 
+                accent={accent} 
+                onTerminalToggle={() => setTerminalMode(!terminalMode)}
+              />
+
+              {/* Settings/Themes Action Dialog Popover */}
+              {showActionModal && (
+                <AccentModal
+                  accent={accent}
+                  onAccentChange={handleAccentChange}
+                  onClose={() => setShowActionModal(false)}
+                />
+              )}
           </div>
 
-          {/* Dual pane list & details */}
-          <div className="palette-grid">
-            {filteredItems.length === 0 ? (
-              <div className="empty-state">
-                <Sparkles size={36} />
-                <div className="empty-state-title">No results found</div>
-                <p className="empty-state-desc">No extension modules match "{search}". Try searching for projects, skills, or CIT courses.</p>
-              </div>
-            ) : (
-              <>
-                {/* Left List */}
-                <CommandList
-                  items={filteredItems}
-                  selectedIndex={selectedIndex}
-                  onItemClick={executeItemAction}
-                  onHoverItem={(index) => setSelectedIndex(index)}
-                  expandedSections={expandedSections}
-                  onToggleSection={(category) => setExpandedSections((prev) => ({ ...prev, [category]: !prev[category] }))}
-                  sectionCounts={sectionCounts}
-                  isSearching={!!search.trim()}
-                />
-
-                {/* Right Detail Pane */}
-                <DetailPanel
-                  key={selectedItem ? `${selectedItem.category}-${selectedItem.id}` : 'empty'}
-                  selectedItem={selectedItem?.rawItem}
-                  type={selectedItem?.category}
-                  onSelectCourseCode={handleSelectCourseCode}
-                />
-              </>
-            )}
+          {/* Spotify Player underneath the search panel */}
+          <div className="spotify-player-wrapper">
+            <SpotifyPlayer />
           </div>
-
-          {/* Actions Footer Bar */}
-          <ActionPanel onActionClick={() => setShowActionModal(true)} accent={accent} />
-
-          {/* Settings/Themes Action Dialog Popover */}
-          {showActionModal && (
-            <AccentModal
-              accent={accent}
-              onAccentChange={handleAccentChange}
-              onClose={() => setShowActionModal(false)}
-            />
-          )}
         </div>
 
-        {/* Separate Spotify Player module below the main pane */}
-        <SpotifyPlayer />
+        <div className="portfolio-column right-column">
+          {/* Pomodoro Timer widget */}
+          <div className="pomodoro-timer-wrapper">
+            <PomodoroTimer />
+          </div>
+
+          {/* CS Stack Visualizer widget */}
+          <div className="visualizer-widget-wrapper">
+            <div 
+              className="visualizer-bento-card interactive"
+              onClick={() => {
+                const idx = flatItemsList.findIndex((item) => item.id === 'stack-visualizer');
+                if (idx !== -1) {
+                  setSelectedIndex(idx);
+                  window.dispatchEvent(new CustomEvent('trigger-toast', {
+                    detail: { message: "Opened CS Stack Visualizer Lab in center panel." }
+                  }));
+                }
+              }}
+              style={{ cursor: 'pointer' }}
+            >
+              <div className="visualizer-bento-header">
+                <span className="visualizer-bento-category">Computer Science Lab</span>
+                <h3 className="visualizer-bento-title">CS Stack Visualizer</h3>
+              </div>
+              <div className="mini-stack-preview">
+                <div className="mini-stack-frame top-frame">
+                  <span className="mini-frame-name">fib(n=1)</span>
+                  <span className="mini-frame-vars">n=1 (returns 1)</span>
+                </div>
+                <div className="mini-stack-frame">
+                  <span className="mini-frame-name">fib(n=2)</span>
+                  <span className="mini-frame-vars">n=2</span>
+                </div>
+                <div className="mini-stack-frame">
+                  <span className="mini-frame-name">fib(n=3)</span>
+                  <span className="mini-frame-vars">n=3</span>
+                </div>
+                <div className="mini-stack-frame bottom-frame">
+                  <span className="mini-frame-name">main()</span>
+                  <span className="mini-frame-vars">result = ?</span>
+                </div>
+                <div className="mini-stack-cta">
+                  <span>Launch Simulator Lab</span>
+                  <ArrowRight size={12} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Touch Mobile Drawer Sheet Details (Dynamic sliding panel) */}
@@ -339,6 +492,67 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Print-only Resume Layout */}
+      <div className="resume-print-layout">
+        <header className="resume-print-header">
+          <h1 className="resume-name">{fallbackProfileData.name}</h1>
+          <p className="resume-title">{fallbackProfileData.title} | {fallbackProfileData.institution}</p>
+          <div className="resume-contact-row">
+            <span>Email: {fallbackProfileData.email}</span>
+            <span> | </span>
+            <span>GitHub: github.com/{fallbackProfileData.githubUsername}</span>
+            <span> | </span>
+            <span>LinkedIn: {fallbackProfileData.linkedin}</span>
+          </div>
+        </header>
+
+        <section className="resume-print-section">
+          <h2 className="resume-section-title">About Me</h2>
+          <p>{fallbackProfileData.about}</p>
+        </section>
+
+        <section className="resume-print-section">
+          <h2 className="resume-section-title">Skills & Competencies</h2>
+          <div className="resume-skills-grid">
+            {fallbackProfileData.skills.map((skill) => (
+              <div key={skill.name} className="resume-skill-item">
+                <strong>{skill.name}</strong> ({skill.level}) — {skill.notes.join(', ')}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="resume-print-section">
+          <h2 className="resume-section-title">Key Projects</h2>
+          <div className="resume-projects-list">
+            {fallbackProfileData.projects.map((proj) => (
+              <div key={proj.id} className="resume-project-item">
+                <div className="resume-project-header">
+                  <strong>{proj.name}</strong>
+                  <span className="resume-project-lang">{proj.language}</span>
+                </div>
+                <p className="resume-project-desc">{proj.description}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="resume-print-section">
+          <h2 className="resume-section-title">Experience & Education Milestones</h2>
+          <div className="resume-timeline">
+            {fallbackProfileData.timeline.map((event) => (
+              <div key={event.id} className="resume-timeline-item">
+                <div className="resume-timeline-header">
+                  <strong>{event.title}</strong>
+                  <span className="resume-timeline-date">{event.date}</span>
+                </div>
+                <p className="resume-timeline-desc">{event.institution} — {event.description}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
 
       {/* Floating Micro-Toasts */}
       <Toast toasts={toasts} setToasts={setToasts} />

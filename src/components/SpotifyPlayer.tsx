@@ -59,7 +59,7 @@ const NIKI_TRACKS: Track[] = [
 ];
 
 export const SpotifyPlayer: React.FC = () => {
-  const SHOW_LYRICS_FEATURE = false;
+  const SHOW_LYRICS_FEATURE = true;
   const [activeTrack, setActiveTrack] = useState(0);
   const track = NIKI_TRACKS[activeTrack];
 
@@ -98,11 +98,13 @@ export const SpotifyPlayer: React.FC = () => {
       theme: '0'
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     IFrameAPI.createController(element, options, (EmbedController: any) => {
       embedControllerRef.current = EmbedController;
       setController(EmbedController);
 
       // Synchronize with Spotify embed updates
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       EmbedController.addListener('playback_update', (e: any) => {
         const { position, isPaused } = e.data;
         setCurrentTime(position / 1000);
@@ -119,6 +121,7 @@ export const SpotifyPlayer: React.FC = () => {
       }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((window as any).SpotifyIframeApi) {
       handleApiReady();
     } else {
@@ -128,6 +131,7 @@ export const SpotifyPlayer: React.FC = () => {
     return () => {
       window.removeEventListener('spotify-api-ready', handleApiReady);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update track URI when track changes
@@ -135,9 +139,11 @@ export const SpotifyPlayer: React.FC = () => {
     if (controller) {
       const trackUri = `spotify:${track.type || 'track'}:${track.id}`;
       controller.loadUri(trackUri);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentTime(0);
       setIsPlaying(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTrack, controller]);
 
   // Close track dropdown when clicking outside
@@ -153,7 +159,7 @@ export const SpotifyPlayer: React.FC = () => {
 
   // Timer loop for smooth local progress interpolation between API updates
   useEffect(() => {
-    let interval: any = null;
+    let interval: ReturnType<typeof setInterval> | null = null;
     if (isPlaying) {
       interval = setInterval(() => {
         setCurrentTime((prev) => prev + 0.1); // Increment by 0.1s every 100ms

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { fallbackProfileData } from '../data/fallbackData';
 import type { ListItem } from '../components/CommandList';
 
-export function usePortfolioItems(repos: any[]) {
+export function usePortfolioItems(repos: any[], sheets: any[] = [], showMap: boolean = false) {
   const flatItemsList = useMemo(() => {
     const items: ListItem[] = [];
 
@@ -58,6 +58,16 @@ export function usePortfolioItems(repos: any[]) {
       rawItem: { code: 'OVERVIEW', name: 'Curriculum Overview', description: 'Curriculum Roadmap Overview, Mind Map & Summation', semester: 'ALL' },
     });
 
+    items.push({
+      id: 'stack-visualizer',
+      name: 'CS Stack Visualizer Lab',
+      subtitle: 'Simulate C line-by-line call stack & memory',
+      category: 'welcome',
+      badge: 'Visualizer',
+      iconName: 'Cpu',
+      rawItem: { code: 'VISUALIZER', name: 'Stack Visualizer', description: 'Simulate C line-by-line execution, showing Call Stack, memory addresses, and Console outputs.' }
+    });
+
     fallbackProfileData.courses.forEach((course) => {
       items.push({
         id: `course-${course.code}`,
@@ -83,8 +93,32 @@ export function usePortfolioItems(repos: any[]) {
       });
     });
 
+    // 5.5 Map Sheets (only shown when map is visible)
+    if (showMap) {
+      sheets.forEach((sheet) => {
+        items.push({
+          id: `map-${sheet.sheet_no}`,
+          name: `Sheet ${sheet.sheet_no}`,
+          subtitle: sheet.sheet_name,
+          category: 'map',
+          badge: sheet.library_owns === 'Yes' ? 'Library' : 'Online',
+          iconName: 'Map',
+          rawItem: sheet,
+        });
+      });
+    }
+
     // 6. Navigation & Contacts
     items.push(
+      {
+        id: 'action-toggle-map',
+        name: showMap ? 'Hide Interactive Background Map' : 'Show Interactive Background Map',
+        subtitle: showMap ? 'Hide Leaflet Philippines Series 733 map index background' : 'Show interactive Series 733 map index background',
+        category: 'navigation',
+        badge: 'Action',
+        iconName: 'Map',
+        rawItem: { name: 'Toggle Map', value: 'TOGGLE_MAP', actionLabel: 'Toggle Map' },
+      },
       {
         id: 'nav-email',
         name: 'Send Email / Inquire',
@@ -111,11 +145,20 @@ export function usePortfolioItems(repos: any[]) {
         badge: 'Link',
         iconName: 'Linkedin',
         rawItem: { name: 'LinkedIn Link', value: fallbackProfileData.linkedin, actionLabel: 'Open Link' },
+      },
+      {
+        id: 'nav-export-resume',
+        name: 'Export Resume as PDF',
+        subtitle: 'Generate and print structured CV',
+        category: 'navigation',
+        badge: 'Action',
+        iconName: 'FileText',
+        rawItem: { name: 'Export Resume', value: 'EXPORT_RESUME', actionLabel: 'Print CV' },
       }
     );
 
     return items;
-  }, [repos]);
+  }, [repos, sheets, showMap]);
 
   const sectionCounts = useMemo(() => {
     const counts: Record<string, number> = {
@@ -125,6 +168,7 @@ export function usePortfolioItems(repos: any[]) {
       course: 0,
       skill: 0,
       navigation: 0,
+      map: 0,
     };
     flatItemsList.forEach((item) => {
       if (counts[item.category] !== undefined) {
