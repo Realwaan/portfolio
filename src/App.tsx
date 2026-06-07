@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, ShieldAlert, Sparkles, X, ArrowRight } from 'lucide-react';
+import { Search, ShieldAlert, Sparkles, X } from 'lucide-react';
 import { fallbackProfileData } from './data/fallbackData';
 import { useGithubRepos } from './hooks/useGithubRepos';
 import { CommandList } from './components/CommandList';
@@ -420,50 +420,6 @@ export default function App() {
           {/* Pomodoro Timer widget */}
           <div className="pomodoro-timer-wrapper">
             <PomodoroTimer />
-          </div>
-
-          {/* CS Stack Visualizer widget */}
-          <div className="visualizer-widget-wrapper">
-            <div 
-              className="visualizer-bento-card interactive"
-              onClick={() => {
-                const idx = flatItemsList.findIndex((item) => item.id === 'stack-visualizer');
-                if (idx !== -1) {
-                  setSelectedIndex(idx);
-                  window.dispatchEvent(new CustomEvent('trigger-toast', {
-                    detail: { message: "Opened CS Stack Visualizer Lab in center panel." }
-                  }));
-                }
-              }}
-              style={{ cursor: 'pointer' }}
-            >
-              <div className="visualizer-bento-header">
-                <span className="visualizer-bento-category">Computer Science Lab</span>
-                <h3 className="visualizer-bento-title">CS Stack Visualizer</h3>
-              </div>
-              <div className="mini-stack-preview">
-                <div className="mini-stack-frame top-frame">
-                  <span className="mini-frame-name">fib(n=1)</span>
-                  <span className="mini-frame-vars">n=1 (returns 1)</span>
-                </div>
-                <div className="mini-stack-frame">
-                  <span className="mini-frame-name">fib(n=2)</span>
-                  <span className="mini-frame-vars">n=2</span>
-                </div>
-                <div className="mini-stack-frame">
-                  <span className="mini-frame-name">fib(n=3)</span>
-                  <span className="mini-frame-vars">n=3</span>
-                </div>
-                <div className="mini-stack-frame bottom-frame">
-                  <span className="mini-frame-name">main()</span>
-                  <span className="mini-frame-vars">result = ?</span>
-                </div>
-                <div className="mini-stack-cta">
-                  <span>Launch Simulator Lab</span>
-                  <ArrowRight size={12} />
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
