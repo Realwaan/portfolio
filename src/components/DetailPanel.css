@@ -1074,6 +1074,7 @@
 
 .visualizer-controls-row {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
@@ -1100,6 +1101,7 @@
 .visualizer-btn-group {
   display: flex;
   gap: 4px;
+  flex-wrap: wrap;
 }
 
 .visualizer-btn {
@@ -1513,5 +1515,18 @@
   25% { content: '.'; }
   50% { content: '..'; }
   75% { content: '...'; }
+}
+
+@media (max-width: 650px) {
+  .visualizer-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .code-sim-box {
+    height: 180px;
+  }
+  .visualizer-right-pane {
+    height: 240px;
+  }
 }
 
