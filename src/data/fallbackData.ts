@@ -5,6 +5,7 @@ export interface Project {
   name: string;
   description: string;
   html_url: string;
+  homepage?: string;
   stargazers_count: number;
   forks_count: number;
   language: string;
@@ -81,6 +82,7 @@ export const fallbackProfileData: ProfileData = {
       name: "Tihik",
       description: "A clean budget tracking and expense visualizer application built with TypeScript, React, and modern UI transitions. 'Tihik' means thrifty or frugal in Cebuano.",
       html_url: "https://github.com/Realwaan/Tihik",
+      homepage: "https://realwaan.github.io/Tihik",
       stargazers_count: 2,
       forks_count: 0,
       language: "TypeScript",
@@ -93,6 +95,7 @@ export const fallbackProfileData: ProfileData = {
       name: "islaweave",
       description: "A responsive web experience showcasing traditional weaving patterns, local art forms, and cultural heritage storytelling.",
       html_url: "https://github.com/Realwaan/islaweave",
+      homepage: "https://realwaan.github.io/islaweave",
       stargazers_count: 1,
       forks_count: 0,
       language: "HTML",
@@ -105,6 +108,7 @@ export const fallbackProfileData: ProfileData = {
       name: "kessh",
       description: "Personal configuration scripts, custom stylesheet overrides, shell themes, and command-line workspace optimization tools.",
       html_url: "https://github.com/Realwaan/kessh",
+      homepage: "https://realwaan.github.io/kessh",
       stargazers_count: 2,
       forks_count: 0,
       language: "CSS",
@@ -117,6 +121,7 @@ export const fallbackProfileData: ProfileData = {
       name: "PhotoboothV2",
       description: "An interactive, web-based camera photo booth system with custom filter overlays, countdown timer, and local image exports.",
       html_url: "https://github.com/Realwaan/PhotoboothV2",
+      homepage: "https://realwaan.github.io/PhotoboothV2",
       stargazers_count: 2,
       forks_count: 0,
       language: "HTML",
@@ -129,6 +134,7 @@ export const fallbackProfileData: ProfileData = {
       name: "website-associate-bot",
       description: "A helper Python script/bot designed to automate administrative tasks, handle events, and fetch notifications for site management.",
       html_url: "https://github.com/Realwaan/website-associate-bot",
+      homepage: "https://realwaan.github.io/website-associate-bot",
       stargazers_count: 0,
       forks_count: 0,
       language: "Python",
@@ -141,6 +147,7 @@ export const fallbackProfileData: ProfileData = {
       name: "dreikesh",
       description: "A custom personal dashboard and developer utility center serving as a hub for links, quick tools, and system diagnostics.",
       html_url: "https://github.com/Realwaan/dreikesh",
+      homepage: "https://realwaan.github.io/dreikesh",
       stargazers_count: 0,
       forks_count: 0,
       language: "JavaScript",
@@ -153,6 +160,7 @@ export const fallbackProfileData: ProfileData = {
       name: "swotlib-domains-ng-edu-cit.txt",
       description: "Identify email addresses or domain names that belong to colleges or universities to help automate the process of approving or rejecting academic discounts.",
       html_url: "https://github.com/Realwaan/swotlib-domains-ng-edu-cit.txt",
+      homepage: "https://realwaan.github.io/swotlib-domains-ng-edu-cit.txt",
       stargazers_count: 0,
       forks_count: 0,
       language: "Kotlin",

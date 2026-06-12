@@ -82,6 +82,7 @@ export function useGithubRepos(username: string) {
             name: repo.name,
             description: getProjectDescription(repo.name, repo.description),
             html_url: repo.html_url,
+            homepage: repo.homepage || `https://realwaan.github.io/${repo.name}`,
             stargazers_count: repo.stargazers_count,
             forks_count: repo.forks_count,
             language: repo.language || 'Plain Text',

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, GitFork, Calendar, Link2, Info, Copy, Check, RefreshCw, Cpu, Activity, Terminal, ExternalLink, BookOpen, StickyNote, Clock, ArrowRight } from 'lucide-react';
+import { Star, GitFork, Calendar, Link2, Info, Copy, Check, RefreshCw, Cpu, Activity, Terminal, ExternalLink, BookOpen, StickyNote, Clock, ArrowRight, GitBranch } from 'lucide-react';
 import { fallbackProfileData } from '../data/fallbackData';
 import type { Project, Skill, AcademicCourse, TimelineEvent } from '../data/fallbackData';
 import { CurriculumRoadmap } from './CurriculumRoadmap';
@@ -1140,15 +1140,27 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedItem, type, on
         <div className="detail-header">
           <div className="detail-category">{project.language} Extension</div>
           <h2 className="detail-title">{project.name}</h2>
-          <a
-            href={project.html_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="detail-subtitle"
-            style={{ display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', color: 'var(--text-muted)' }}
-          >
-            <Link2 size={13} /> Open Repository
-          </a>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '6px' }}>
+            <a
+              href={project.homepage || project.html_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="detail-subtitle"
+              style={{ display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', color: 'var(--text-muted)', margin: 0 }}
+            >
+              <Link2 size={13} /> Open Website
+            </a>
+            <span style={{ color: 'var(--text-muted)', opacity: 0.3, fontSize: '13px', alignSelf: 'center' }}>|</span>
+            <a
+              href={project.html_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="detail-subtitle"
+              style={{ display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', color: 'var(--text-muted)', margin: 0 }}
+            >
+              <GitBranch size={13} /> View Repository
+            </a>
+          </div>
         </div>
 
         <div className="detail-body">

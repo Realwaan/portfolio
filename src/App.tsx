@@ -276,8 +276,8 @@ export default function App() {
       if (isMobile) {
         setShowMobileDrawer(true);
       } else {
-        window.open(item.rawItem.html_url, '_blank');
-        triggerToast(`Opening repository link...`);
+        window.open(item.rawItem.homepage || item.rawItem.html_url, '_blank');
+        triggerToast(`Opening project website...`);
       }
     } else {
       if (isMobile) {
