@@ -1197,16 +1197,21 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedItem, type, on
           )}
 
           {/* Interactive Project Showcase Widget */}
-          <div className="detail-section-title">Interactive Showcase</div>
-          {project.name === 'Tihik' && <TihikSimulator />}
-          {project.name === 'islaweave' && <IslaweaveSimulator />}
-          {project.name === 'kessh' && <KesshSimulator />}
-          {project.name === 'PhotoboothV2' && <PhotoboothSimulator />}
-          {project.name === 'website-associate-bot' && <BotSimulator />}
-          {project.name === 'dreikesh' && <DreikeshSimulator />}
-          {project.name === 'swotlib-domains-ng-edu-cit.txt' && <SwotlibSimulator />}
+          {['Tihik', 'islaweave', 'kessh', 'PhotoboothV2', 'website-associate-bot', 'dreikesh', 'swotlib-domains-ng-edu-cit.txt'].includes(project.name) && (
+            <>
+              <div className="detail-section-title">Interactive Showcase</div>
+              {project.name === 'Tihik' && <TihikSimulator />}
+              {project.name === 'islaweave' && <IslaweaveSimulator />}
+              {project.name === 'kessh' && <KesshSimulator />}
+              {project.name === 'PhotoboothV2' && <PhotoboothSimulator />}
+              {project.name === 'website-associate-bot' && <BotSimulator />}
+              {project.name === 'dreikesh' && <DreikeshSimulator />}
+              {project.name === 'swotlib-domains-ng-edu-cit.txt' && <SwotlibSimulator />}
+            </>
+          )}
 
           {/* clipboard copy widget */}
+          <div className="detail-section-title">Developer Quick Start</div>
           <GitCloneWidget repoName={project.name} />
         </div>
       </div>
