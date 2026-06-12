@@ -128,7 +128,7 @@ export const CommandList: React.FC<CommandListProps> = ({
                       <img 
                         src={item.rawItem.avatarUrl} 
                         alt="Profile Avatar" 
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
                         onError={(e) => {
                           (e.currentTarget as HTMLImageElement).style.display = 'none';
                           const fallback = document.getElementById(`fallback-${item.id}`);

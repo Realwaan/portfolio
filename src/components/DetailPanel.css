@@ -793,6 +793,9 @@
   filter: grayscale(12%) contrast(102%);
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
   pointer-events: none;
+  /* Improve scaling quality for high-resolution source images */
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .raycast-window:hover .welcome-photo {
@@ -805,7 +808,7 @@
 }
 
 .welcome-photo-container:hover .welcome-photo {
-  transform: scale(1.025);
+  transform: scale(1.025) translateZ(0);
 }
 
 @media (max-width: 860px) {
