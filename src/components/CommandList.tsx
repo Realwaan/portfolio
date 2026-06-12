@@ -8,7 +8,7 @@ interface ListItem {
   id: string;
   name: string;
   subtitle: string;
-  category: 'project' | 'skill' | 'course' | 'navigation' | 'welcome';
+  category: 'project' | 'skill' | 'course' | 'navigation' | 'welcome' | 'timeline' | 'map';
   badge: string;
   iconName: string;
   rawItem: any;
@@ -48,16 +48,20 @@ export const CommandList: React.FC<CommandListProps> = ({
   const categories: { [key: string]: ListItem[] } = {
     'Welcome Profile': [],
     'GitHub Projects': [],
+    'Experience & Timeline': [],
     'Academic Modules (CIT-U)': [],
     'Technical Capabilities': [],
+    'Philippines 1:50k Sheets': [],
     'Navigation & Actions': []
   };
 
   const categoryMap: { [key: string]: string } = {
     'welcome': 'Welcome Profile',
     'project': 'GitHub Projects',
+    'timeline': 'Experience & Timeline',
     'course': 'Academic Modules (CIT-U)',
     'skill': 'Technical Capabilities',
+    'map': 'Philippines 1:50k Sheets',
     'navigation': 'Navigation & Actions'
   };
 
@@ -104,12 +108,13 @@ export const CommandList: React.FC<CommandListProps> = ({
                 </span>
               )}
             </h3>
-            {categoryItems.map((item) => {
+            {isExpanded && categoryItems.map((item) => {
               const itemIdx = items.indexOf(item);
               const isSelected = itemIdx === selectedIndex;
 
               return (
                 <div
+                  id={item.id}
                   key={item.id}
                   className={`list-item ${isSelected ? 'selected' : ''}`}
                   onClick={() => onItemClick(item)}

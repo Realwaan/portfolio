@@ -49,8 +49,11 @@ export function useKeyboardNavigation({
         return;
       }
 
-      // Focus input if any other key is pressed and input is not active
+      // Focus input if any other key is pressed and user is not already typing in another input/textarea
+      const activeTag = document.activeElement?.tagName;
+      const isTyping = activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT';
       if (
+        !isTyping &&
         document.activeElement !== searchInputRef.current &&
         e.key.length === 1 &&
         !e.ctrlKey &&

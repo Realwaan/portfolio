@@ -5,7 +5,7 @@
   /* Dark Mode Default Theme (Raycast-like) */
   --bg-color: #0b0b0c;
   --bg-app: #121214;
-  --bg-palette: rgba(22, 22, 26, 0.7);
+  --bg-palette: rgba(12, 12, 16, 0.62);
   --bg-hover: rgba(255, 255, 255, 0.05);
   --bg-selected: rgba(255, 255, 255, 0.06);
   --bg-kbd: rgba(255, 255, 255, 0.08);
@@ -14,11 +14,16 @@
   --text-muted: #8e8e93;
   --text-dimmed: #5d5d62;
 
-  --border-color: rgba(255, 255, 255, 0.07);
-  --border-focus: rgba(255, 255, 255, 0.15);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-focus: rgba(var(--accent-rgb), 0.45);
 
-  --shadow-main: 0 20px 40px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-main: 0 0 0 1px rgba(0, 0, 0, 0.35),
+                 0 10px 30px -10px rgba(0, 0, 0, 0.6),
+                 0 20px 40px -15px rgba(0, 0, 0, 0.4),
+                 inset 0 1px 1px rgba(255, 255, 255, 0.06);
   --shadow-glow: 0 0 40px rgba(255, 59, 48, 0.03);
+
+  --glass-blur: blur(32px) saturate(190%);
 
   /* Font Families */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -27,6 +32,7 @@
 
   /* Accent Color presets (will be switched dynamically via [data-accent]) */
   --accent-color: #ff3b30;
+  --accent-text-color: #ffffff;
   /* Raycast Crimson */
   --accent-rgb: 255, 59, 48;
 }
@@ -34,6 +40,7 @@
 /* Accent Color Variations */
 [data-accent="cit-gold"] {
   --accent-color: #ffc72c;
+  --accent-text-color: #0b0b0c;
   /* CIT-U Gold */
   --accent-rgb: 255, 199, 44;
   --shadow-glow: 0 0 40px rgba(255, 199, 44, 0.05);
@@ -41,6 +48,7 @@
 
 [data-accent="cit-maroon"] {
   --accent-color: #b31010;
+  --accent-text-color: #ffffff;
   /* CIT-U Maroon */
   --accent-rgb: 179, 16, 16;
   --shadow-glow: 0 0 40px rgba(179, 16, 16, 0.05);
@@ -48,6 +56,7 @@
 
 [data-accent="raycast-red"] {
   --accent-color: #ff3b30;
+  --accent-text-color: #ffffff;
   --accent-rgb: 255, 59, 48;
   --shadow-glow: 0 0 40px rgba(255, 59, 48, 0.03);
 }
@@ -89,4 +98,145 @@ body,
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+
+/* Print-only Resume Styles */
+.resume-print-layout {
+  display: none;
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  #root,
+  .app-container,
+  .ph-map-panel-container,
+  .welcome-banner,
+  .portfolio-wrapper,
+  .drawer-overlay,
+  .toast-container {
+    display: none !important;
+  }
+  
+  .resume-print-layout {
+    display: block !important;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 30px 40px;
+    font-family: var(--font-sans);
+    color: #111827;
+    background: #ffffff;
+    box-sizing: border-box;
+  }
+  
+  .resume-print-header {
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .resume-name {
+    font-family: var(--font-header);
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #111827;
+  }
+  
+  .resume-title {
+    font-size: 13px;
+    color: #4b5563;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  
+  .resume-contact-row {
+    font-size: 11px;
+    color: #6b7280;
+    font-family: var(--font-mono);
+  }
+  
+  .resume-print-section {
+    margin-bottom: 18px;
+  }
+  
+  .resume-section-title {
+    font-family: var(--font-header);
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+    color: #374151;
+  }
+  
+  .resume-print-section p {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #4b5563;
+    margin: 0;
+  }
+  
+  .resume-skills-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .resume-skill-item {
+    font-size: 11.5px;
+    line-height: 1.4;
+    color: #4b5563;
+  }
+  
+  .resume-skill-item strong {
+    color: #1f2937;
+  }
+  
+  .resume-projects-list,
+  .resume-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .resume-project-item,
+  .resume-timeline-item {
+    page-break-inside: avoid;
+  }
+  
+  .resume-project-header,
+  .resume-timeline-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 2px;
+  }
+  
+  .resume-project-header strong,
+  .resume-timeline-header strong {
+    color: #1f2937;
+  }
+  
+  .resume-project-lang,
+  .resume-timeline-date {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: #6b7280;
+  }
+  
+  .resume-project-desc,
+  .resume-timeline-desc {
+    font-size: 11.5px;
+    line-height: 1.4;
+    color: #4b5563;
+    margin: 0;
+  }
 }

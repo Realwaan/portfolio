@@ -1,0 +1,111 @@
+.terminal-console-container {
+  width: 100%;
+  height: 100%;
+  background-color: #070708;
+  padding: 16px 20px;
+  position: relative;
+  overflow-y: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Retro Scanlines Overlay */
+.terminal-crt-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  ), 
+  linear-gradient(
+    90deg, 
+    rgba(255, 0, 0, 0.04), 
+    rgba(0, 255, 0, 0.01), 
+    rgba(0, 0, 255, 0.04)
+  );
+  background-size: 100% 3px, 3px 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.terminal-history {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #38bdf8; /* light blue or phosphor green default */
+  text-shadow: 0 0 4px rgba(56, 189, 248, 0.35);
+  font-family: var(--font-mono) !important;
+}
+
+/* Adjust colors based on accent themes */
+[data-accent="raycast-red"] .terminal-history {
+  color: #39ff14; /* retro green phosphor */
+  text-shadow: 0 0 4px rgba(57, 255, 20, 0.4);
+}
+
+[data-accent="cit-gold"] .terminal-history {
+  color: #f59e0b; /* amber phosphor */
+  text-shadow: 0 0 4px rgba(245, 158, 11, 0.4);
+}
+
+[data-accent="cit-maroon"] .terminal-history {
+  color: #fb7185; /* rose-tinted */
+  text-shadow: 0 0 4px rgba(251, 113, 133, 0.4);
+}
+
+.terminal-line {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.terminal-input-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.terminal-prompt {
+  font-weight: bold;
+  color: var(--accent-color);
+  text-shadow: 0 0 5px rgba(var(--accent-rgb), 0.5);
+  flex-shrink: 0;
+}
+
+.terminal-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-mono) !important;
+  font-size: 13.5px;
+  color: inherit;
+  text-shadow: inherit;
+  padding: 0;
+  margin: 0;
+  caret-color: var(--accent-color);
+}
+
+/* Customize terminal scrollbar */
+.terminal-console-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.terminal-console-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.terminal-console-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+
+.terminal-console-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}

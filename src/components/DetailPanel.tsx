@@ -1,10 +1,13 @@
 import React from 'react';
-import { Star, GitFork, Calendar, Link2, Info, Copy, Check, RefreshCw, Cpu, Activity, Terminal, ExternalLink, BookOpen, StickyNote } from 'lucide-react';
-import type { Project, Skill, AcademicCourse } from '../data/fallbackData';
+import { Star, GitFork, Calendar, Link2, Info, Copy, Check, RefreshCw, Cpu, Activity, Terminal, ExternalLink, BookOpen, StickyNote, Clock, ArrowRight, GitBranch } from 'lucide-react';
+import { fallbackProfileData } from '../data/fallbackData';
+import type { Project, Skill, AcademicCourse, TimelineEvent } from '../data/fallbackData';
 import { CurriculumRoadmap } from './CurriculumRoadmap';
 import { bscsCurriculum } from '../data/curriculumData';
 import { getCourseNotes } from '../data/courseNotesData';
 import { NotionBlockRenderer } from './NotionBlockRenderer';
+import { useNotionNotes } from '../hooks/useNotionNotes';
+import { StackVisualizer } from './StackVisualizer';
 import './DetailPanel.css';
 import './ShowcaseWidgets.css';
 
@@ -635,15 +638,8 @@ const CourseNotesView: React.FC<CourseNotesViewProps> = ({ courseCode, onSelectC
     return getCourseNotes(courseNode?.code || courseCode, courseNode);
   }, [courseNode, courseCode]);
 
-  // Notion state
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [isOfflineFallback, setIsOfflineFallback] = React.useState(false);
-  const [notionData, setNotionData] = React.useState<{
-    properties: any;
-    blocks: any[];
-    icon?: any;
-    cover?: any;
-  } | null>(null);
+  // Notion state hook
+  const { notionData, loading: isLoading, isOfflineFallback } = useNotionNotes(courseNode?.code || courseCode);
 
   // Local storage checklist state for local fallback notes
   const storageKey = `course_notes_checklist_${courseNode?.code || courseCode}`;
@@ -676,85 +672,6 @@ const CourseNotesView: React.FC<CourseNotesViewProps> = ({ courseCode, onSelectC
       detail: { message: isNowChecked ? `Marked complete: "${topicText}"` : `Marked incomplete: "${topicText}"` }
     }));
   };
-
-  // Fetch Notion notes on mount or when courseCode changes
-  React.useEffect(() => {
-    let active = true;
-    const cacheKey = `notion_course_notes_${courseNode?.code || courseCode}`;
-    const cacheDuration = 10 * 60 * 1000; // 10 minutes
-
-    const fetchNotes = async () => {
-      // 1. Check local cache
-      try {
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-          const { timestamp, data } = JSON.parse(cached);
-          if (Date.now() - timestamp < cacheDuration) {
-            setNotionData(data);
-            setIsLoading(false);
-            setIsOfflineFallback(false);
-            return;
-          }
-        }
-      } catch (err) {
-        console.warn('Failed to parse cached Notion notes', err);
-      }
-
-      setIsLoading(true);
-
-      // 2. Fetch from proxy API
-      try {
-        const url = `/api/notes?courseCode=${encodeURIComponent(courseNode?.code || courseCode)}`;
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error(`API returned status ${response.status}`);
-        }
-
-        const data = await response.json();
-        
-        if (!active) return;
-
-        // Save to cache
-        try {
-          localStorage.setItem(cacheKey, JSON.stringify({
-            timestamp: Date.now(),
-            data: {
-              properties: data.properties || {},
-              blocks: data.blocks || [],
-              icon: data.icon,
-              cover: data.cover
-            }
-          }));
-        } catch (err) {
-          console.warn('Failed to write Notion notes to cache', err);
-        }
-
-        setNotionData(data);
-        setIsLoading(false);
-        setIsOfflineFallback(false);
-      } catch (error) {
-        console.error('Failed fetching live Notion notes:', error);
-        
-        if (!active) return;
-
-        // Fail silently to local fallback
-        setIsOfflineFallback(true);
-        setIsLoading(false);
-        
-        // Dispatch custom toast notification to alert the user
-        window.dispatchEvent(new CustomEvent('trigger-toast', {
-          detail: { message: 'Offline Mode: Loaded local study templates.' }
-        }));
-      }
-    };
-
-    fetchNotes();
-
-    return () => {
-      active = false;
-    };
-  }, [courseNode?.code, courseCode]);
 
   const unlocks = React.useMemo(() => {
     if (!courseNode) return [];
@@ -1124,13 +1041,12 @@ const CourseNotesView: React.FC<CourseNotesViewProps> = ({ courseCode, onSelectC
 
 // Description editing functionality removed - descriptions are static
 
-
 // ====================================================
 // MAIN COMPONENT: DetailPanel
 // ====================================================
 interface DetailPanelProps {
   selectedItem: any;
-  type: 'project' | 'skill' | 'course' | 'navigation' | 'welcome';
+  type: 'project' | 'skill' | 'course' | 'navigation' | 'welcome' | 'timeline' | 'map';
   onSelectCourseCode?: (code: string) => void;
 }
 
@@ -1157,6 +1073,21 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedItem, type, on
             }
           }}
         />
+      );
+    }
+
+    if (selectedItem.code === 'VISUALIZER') {
+      return (
+        <div className="detail-pane stack-visualizer-detail">
+          <div className="detail-header">
+            <div className="detail-category">Computer Science Sandbox</div>
+            <h2 className="detail-title">CS Stack Visualizer Lab</h2>
+            <p className="detail-subtitle">Simulate pointer memory & recursion stacks line-by-line</p>
+          </div>
+          <div className="detail-body">
+            <StackVisualizer />
+          </div>
+        </div>
       );
     }
 
@@ -1209,15 +1140,27 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedItem, type, on
         <div className="detail-header">
           <div className="detail-category">{project.language} Extension</div>
           <h2 className="detail-title">{project.name}</h2>
-          <a
-            href={project.html_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="detail-subtitle"
-            style={{ display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', color: 'var(--text-muted)' }}
-          >
-            <Link2 size={13} /> Open Repository
-          </a>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '6px' }}>
+            <a
+              href={project.homepage || project.html_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="detail-subtitle"
+              style={{ display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', color: 'var(--text-muted)', margin: 0 }}
+            >
+              <Link2 size={13} /> Open Website
+            </a>
+            <span style={{ color: 'var(--text-muted)', opacity: 0.3, fontSize: '13px', alignSelf: 'center' }}>|</span>
+            <a
+              href={project.html_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="detail-subtitle"
+              style={{ display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', color: 'var(--text-muted)', margin: 0 }}
+            >
+              <GitBranch size={13} /> View Repository
+            </a>
+          </div>
         </div>
 
         <div className="detail-body">
@@ -1381,6 +1324,223 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedItem, type, on
               <span style={{ wordBreak: 'break-all', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>{selectedItem.value}</span>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'timeline') {
+    const activeEvent = selectedItem as TimelineEvent;
+    const allEvents = fallbackProfileData.timeline || [];
+    const completedCount = allEvents.filter(e => e.status === 'Completed').length;
+    const progressPercent = Math.round((completedCount / allEvents.length) * 100);
+
+    return (
+      <div className="detail-pane">
+        <div className="detail-header">
+          <div className="detail-category">{activeEvent.type} milestone</div>
+          <h2 className="detail-title">{activeEvent.title}</h2>
+          <p className="detail-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Clock size={13} style={{ opacity: 0.6 }} />
+            {activeEvent.date} · {activeEvent.institution}
+          </p>
+        </div>
+
+        <div className="detail-body">
+          {/* Milestone Details Card */}
+          <div className="notion-callout" style={{ 
+            borderLeftColor: activeEvent.status === 'Completed' ? '#10b981' : activeEvent.status === 'In Progress' ? 'var(--accent-color)' : 'var(--border-color)', 
+            margin: '0 0 20px 0',
+            boxSizing: 'border-box'
+          }}>
+            <div className="notion-callout-icon">
+              {activeEvent.status === 'Completed' ? '✅' : activeEvent.status === 'In Progress' ? '⚡' : '⏳'}
+            </div>
+            <div className="notion-callout-content">
+              <span className={`notion-badge status-${activeEvent.status.toLowerCase().replace(' ', '-')}`} style={{ marginBottom: '8px' }}>
+                {activeEvent.status}
+              </span>
+              <p style={{ margin: '4px 0 0 0', fontSize: '13px', lineHeight: '1.5', color: 'var(--text-main)' }}>
+                {activeEvent.description}
+              </p>
+            </div>
+          </div>
+
+          {/* Interactive Redirection or Navigation Shortcut */}
+          {activeEvent.associatedId && (
+            <div style={{ marginBottom: '24px' }}>
+              <div className="detail-section-title">Linked Portfolio Item</div>
+              <button
+                className="timeline-card-link-btn"
+                onClick={() => {
+                  const targetElement = document.getElementById(activeEvent.associatedId || '');
+                  if (targetElement) {
+                    targetElement.click();
+                  }
+                }}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <ArrowRight size={13} />
+                <span>Inspect Linked Asset ({activeEvent.associatedId.startsWith('repo-') ? 'Repository' : 'Academic notes'})</span>
+              </button>
+            </div>
+          )}
+
+          {/* Entire Journey Progress Bar */}
+          <div className="timeline-progress-section">
+            <div className="timeline-progress-header">
+              <span>Wildcat Roadmap Progress</span>
+              <span className="timeline-progress-percentage">{progressPercent}% Completed</span>
+            </div>
+            <div className="timeline-progress-bar-container">
+              <div className="timeline-progress-bar-fill" style={{ width: `${progressPercent}%` }}></div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-dimmed)', marginTop: '6px' }}>
+              <span>Start (Aug 2025)</span>
+              <span>{completedCount} of {allEvents.length} Milestones Cleared</span>
+              <span>Sophomore Year (Aug 2026)</span>
+            </div>
+          </div>
+
+          {/* Timeline Visual Track */}
+          <div className="detail-section-title">Full Milestone Journey</div>
+          <div className="timeline-track-container">
+            <div className="timeline-vertical-line"></div>
+            
+            {allEvents.map((event) => {
+              const isSelected = event.id === activeEvent.id;
+              const wrapperClass = `timeline-event-wrapper ${event.status.toLowerCase().replace(' ', '-')} ${isSelected ? 'selected' : ''}`;
+              
+              return (
+                <div 
+                  key={event.id} 
+                  className={wrapperClass}
+                  onClick={() => {
+                    const listElement = document.getElementById(`timeline-${event.id}`);
+                    if (listElement) {
+                      listElement.click();
+                    }
+                  }}
+                >
+                  <div className="timeline-event-node"></div>
+                  <div className="timeline-card">
+                    <div className="timeline-card-header">
+                      <div className="timeline-card-title-row">
+                        <span className="timeline-card-title">{event.title}</span>
+                        <span className="timeline-card-date">{event.date}</span>
+                      </div>
+                      <span className={`timeline-card-badge status-${event.status.toLowerCase().replace(' ', '-')}`}>
+                        {event.status}
+                      </span>
+                    </div>
+                    {isSelected && (
+                      <p className="timeline-card-description">{event.description}</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'map') {
+    const sheet = selectedItem;
+    if (!sheet) return null;
+
+    const isOwned = sheet.library_owns === 'Yes';
+    
+    // Quick copy command helper
+    const handleCopyCall = () => {
+      if (sheet.call_number) {
+        navigator.clipboard.writeText(sheet.call_number);
+        window.dispatchEvent(new CustomEvent('trigger-toast', {
+          detail: { message: `Call number ${sheet.call_number} copied to clipboard!` }
+        }));
+      }
+    };
+
+    return (
+      <div className="detail-pane map-sheet-detail">
+        <div className="detail-header">
+          <div className="detail-category">Philippines 1:50k Topographic Sheet</div>
+          <h2 className="detail-title">Sheet {sheet.sheet_no}</h2>
+          <p className="detail-subtitle">{sheet.sheet_name}</p>
+        </div>
+
+        <div className="detail-body">
+          {/* Metadata Card */}
+          <div className="notion-callout" style={{ 
+            borderLeftColor: isOwned ? '#10b981' : 'var(--border-color)', 
+            margin: '0 0 20px 0',
+            boxSizing: 'border-box'
+          }}>
+            <div className="notion-callout-icon">
+              {isOwned ? '📚' : '⚠️'}
+            </div>
+            <div className="notion-callout-content">
+              <span className={`notion-badge ${isOwned ? 'status-completed' : 'status-upcoming'}`} style={{ marginBottom: '8px' }}>
+                {isOwned ? 'Owned by Library' : 'Not Owned by Library'}
+              </span>
+              <p style={{ margin: '4px 0 0 0', fontSize: '13px', lineHeight: '1.5', color: 'var(--text-main)' }}>
+                {isOwned 
+                  ? `This sheet is available in the library at location: ${sheet.library_location || 'Map Room'}.` 
+                  : 'This sheet is not currently owned by the library database.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="detail-section-title">Catalog Information</div>
+          <div className="stats-row" style={{ flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Series:</span>
+              <span>{sheet.series || 'Series 733 (NAMRIA)'}</span>
+            </div>
+            {sheet.call_number && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Call Number:</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <code className="font-mono" style={{ background: 'rgba(255,255,255,0.04)', padding: '2px 4px', borderRadius: '4px' }}>
+                    {sheet.call_number}
+                  </code>
+                  <button 
+                    onClick={handleCopyCall}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px' }}
+                    title="Copy Call Number"
+                  >
+                    <Copy size={12} />
+                  </button>
+                </span>
+              </div>
+            )}
+            {sheet.bounds && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Bounding Coordinates:</span>
+                <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', textAlign: 'right' }}>
+                  {sheet.bounds.min_lon.toFixed(3)}°E to {sheet.bounds.max_lon.toFixed(3)}°E<br/>
+                  {sheet.bounds.min_lat.toFixed(3)}°N to {sheet.bounds.max_lat.toFixed(3)}°N
+                </span>
+              </div>
+            )}
+          </div>
+
+          {sheet.scan && sheet.scan !== 'NONE' && (
+            <>
+              <div className="detail-section-title">NAMRIA Digital Map Scan</div>
+              <a
+                href={sheet.scan}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="skill-doc-link"
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderRadius: '6px', backgroundColor: 'rgba(var(--accent-rgb), 0.08)', color: 'var(--accent-color)', border: '1px solid rgba(var(--accent-rgb), 0.15)', textDecoration: 'none', fontSize: '13px', fontWeight: 600, transition: 'all 0.2s ease' }}
+              >
+                <ExternalLink size={14} />
+                <span>Open Digital Map Scan Page</span>
+              </a>
+            </>
+          )}
         </div>
       </div>
     );

@@ -6,9 +6,10 @@ import './ActionPanel.css';
 interface ActionPanelProps {
   onActionClick: () => void;
   accent: 'raycast-red' | 'cit-gold' | 'cit-maroon';
+  onTerminalToggle?: () => void;
 }
 
-export const ActionPanel: React.FC<ActionPanelProps> = ({ onActionClick, accent }) => {
+export const ActionPanel: React.FC<ActionPanelProps> = ({ onActionClick, accent, onTerminalToggle }) => {
   const getAccentLabel = () => {
     switch (accent) {
       case 'cit-gold': return 'CIT-U Gold';
@@ -19,9 +20,14 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ onActionClick, accent 
 
   return (
     <footer className="action-panel">
-      <div className="action-left">
-        <Terminal size={14} />
-        <span>Portfolio Command System</span>
+      <div 
+        className="action-left" 
+        onClick={onTerminalToggle}
+        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+      >
+        <Terminal size={14} style={{ color: 'var(--accent-color)' }} />
+        <span>Command CLI System</span>
+        <kbd style={{ marginLeft: '4px', fontSize: '8px' }}>Ctrl + \</kbd>
       </div>
       <div className="action-right">
         <span className="keyboard-shortcut-hint">

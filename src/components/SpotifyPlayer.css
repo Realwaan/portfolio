@@ -2,8 +2,8 @@
 .spotify-player-inline {
   width: 100%;
   background-color: var(--bg-palette);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   box-shadow: var(--shadow-main), var(--shadow-glow);
@@ -21,7 +21,7 @@
 .spotify-player-inline:focus-within,
 .spotify-player-inline:hover {
   border-color: rgba(var(--accent-rgb), 0.25);
-  box-shadow: var(--shadow-main), 0 0 0 1px rgba(var(--accent-rgb), 0.1), var(--shadow-glow);
+  box-shadow: var(--shadow-main), 0 0 0 2px rgba(var(--accent-rgb), 0.15), var(--shadow-glow);
 }
 
 .spotify-player-main-row {

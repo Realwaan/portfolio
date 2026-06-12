@@ -125,7 +125,9 @@ export default async function handler(req: ExtendedRequest, res: ServerResponse)
     res.end(JSON.stringify({
       pageId: page.id,
       properties: page.properties,
-      blocks: blocksData.results || []
+      blocks: blocksData.results || [],
+      icon: page.icon,
+      cover: page.cover
     }));
 
   } catch (error: any) {
