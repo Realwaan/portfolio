@@ -89,7 +89,7 @@ export default async function handler(req: ExtendedRequest, res: ServerResponse)
       return;
     }
 
-    const queryData = await queryResponse.json();
+    const queryData = (await queryResponse.json()) as any;
     if (!queryData.results || queryData.results.length === 0) {
       res.statusCode = 404;
       res.setHeader('Content-Type', 'application/json');
@@ -117,7 +117,7 @@ export default async function handler(req: ExtendedRequest, res: ServerResponse)
       return;
     }
 
-    const blocksData = await blocksResponse.json();
+    const blocksData = (await blocksResponse.json()) as any;
 
     // Return combined dataset
     res.statusCode = 200;
