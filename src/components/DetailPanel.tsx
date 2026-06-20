@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, GitFork, Calendar, Link2, Info, Copy, Check, RefreshCw, Cpu, Activity, Terminal, ExternalLink, BookOpen, StickyNote, Clock, ArrowRight, GitBranch } from 'lucide-react';
+import { Star, GitFork, Calendar, Link2, Info, Copy, Check, RefreshCw, Cpu, Activity, Terminal, ExternalLink, BookOpen, StickyNote, Clock, ArrowRight, GitBranch, ShoppingCart, Plus, Minus, ShoppingBag, Receipt, ChevronLeft } from 'lucide-react';
 import { fallbackProfileData } from '../data/fallbackData';
 import type { Project, Skill, AcademicCourse, TimelineEvent } from '../data/fallbackData';
 import { CurriculumRoadmap } from './CurriculumRoadmap';
@@ -575,6 +575,529 @@ const SwotlibSimulator: React.FC = () => {
           </span>
         </div>
       </div>
+    </div>
+  );
+};
+
+// ----------------------------------------------------
+// Sub-component: USCCE Merch & Order Simulator
+// ----------------------------------------------------
+const USCCESimulator: React.FC = () => {
+  const PRODUCTS = [
+    {
+      id: 1,
+      name: "USC CE Official Council Shirt",
+      description: "Official Civil Engineering department shirt. Made of premium cotton-blend fabric with a screen-printed geometric seal. Lightweight and breathable for all-day wear on campus.",
+      price: 350.0,
+      category: "apparel",
+      options: ["XS", "S", "M", "L", "XL", "XXL"],
+      inStock: true,
+    },
+    {
+      id: 2,
+      name: "USC CE Solihiya-Style Lanyard",
+      description: "Premium sub-lanyard featuring a local heritage-inspired solihiya geometric pattern in green and gold. Features a heavy-duty chrome buckle and a detachable card holder.",
+      price: 120.0,
+      category: "accessories",
+      options: ["Standard Size"],
+      inStock: true,
+    },
+    {
+      id: 3,
+      name: "USC Civil Engineering Varsity Hoodie",
+      description: "Perfect for cool days in the laboratory or drafting class. Features a chenille patch embroidery of the 'CIVIL ENGINEERING' lettering on the chest and a kangaroo pocket.",
+      price: 850.0,
+      category: "apparel",
+      options: ["S", "M", "L", "XL"],
+      inStock: true,
+    },
+    {
+      id: 4,
+      name: "CE Waterproof Sticker Pack",
+      description: "A set of five vinyl stickers designed specifically for Civil Engineering students. Perfect for laptops, drafting tubes, and water tumblers. UV-resistant and waterproof coating.",
+      price: 50.0,
+      category: "accessories",
+      options: ["Pack of 5 Stickers"],
+      inStock: false,
+    },
+  ];
+
+  type CartItem = {
+    id: number;
+    name: string;
+    price: number;
+    option: string;
+    quantity: number;
+  };
+
+  const [view, setView] = React.useState<'catalog' | 'detail' | 'cart' | 'checkout' | 'receipt'>('catalog');
+  const [activeTab, setActiveTab] = React.useState<'apparel' | 'accessories'>('apparel');
+  const [cart, setCart] = React.useState<CartItem[]>([]);
+  const [selectedProduct, setSelectedProduct] = React.useState<typeof PRODUCTS[0] | null>(null);
+  const [selectedOption, setSelectedOption] = React.useState<string>('');
+  const [quantity, setQuantity] = React.useState<number>(1);
+  const [form, setForm] = React.useState({ name: '', studentId: '', email: '', gcashRef: '' });
+  const [receipt, setReceipt] = React.useState<{
+    claimCode: string;
+    date: string;
+    items: CartItem[];
+    total: number;
+    customer: typeof form;
+  } | null>(null);
+
+  const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const cartTotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+
+  const handleProductSelect = (product: typeof PRODUCTS[0]) => {
+    setSelectedProduct(product);
+    setSelectedOption(product.options[0]);
+    setQuantity(1);
+    setView('detail');
+  };
+
+  const handleAddToCart = () => {
+    if (!selectedProduct) return;
+    setCart(prev => {
+      const existing = prev.find(item => item.id === selectedProduct.id && item.option === selectedOption);
+      if (existing) {
+        return prev.map(item => 
+          item.id === selectedProduct.id && item.option === selectedOption
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
+        );
+      }
+      return [...prev, {
+        id: selectedProduct.id,
+        name: selectedProduct.name,
+        price: selectedProduct.price,
+        option: selectedOption,
+        quantity: quantity
+      }];
+    });
+
+    window.dispatchEvent(new CustomEvent('trigger-toast', {
+      detail: { message: `Added ${quantity}x ${selectedProduct.name} (${selectedOption}) to cart.` }
+    }));
+    setView('catalog');
+  };
+
+  const handleUpdateQuantity = (id: number, option: string, delta: number) => {
+    setCart(prev => prev.map(item => {
+      if (item.id === id && item.option === option) {
+        const newQty = item.quantity + delta;
+        return newQty > 0 ? { ...item, quantity: newQty } : null;
+      }
+      return item;
+    }).filter(Boolean) as CartItem[]);
+  };
+
+  const handleCheckoutSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name || !form.studentId || !form.email || !form.gcashRef) {
+      window.dispatchEvent(new CustomEvent('trigger-toast', {
+        detail: { message: "Please fill in all checkout fields." }
+      }));
+      return;
+    }
+    if (form.gcashRef.length < 9) {
+      window.dispatchEvent(new CustomEvent('trigger-toast', {
+        detail: { message: "Please enter a valid GCash Reference Code." }
+      }));
+      return;
+    }
+
+    const claimCode = `CEC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const dateStr = new Date().toLocaleString();
+    const newReceipt = {
+      claimCode,
+      date: dateStr,
+      items: [...cart],
+      total: cartTotal,
+      customer: { ...form }
+    };
+
+    setReceipt(newReceipt);
+    setCart([]);
+    setView('receipt');
+    
+    window.dispatchEvent(new CustomEvent('trigger-toast', {
+      detail: { message: "Order placed successfully! Claim slip generated." }
+    }));
+  };
+
+  const handleCopyReceipt = () => {
+    if (!receipt) return;
+    const text = `USC CE Council Merch Receipt
+Claim Code: ${receipt.claimCode}
+Date: ${receipt.date}
+Customer Name: ${receipt.customer.name}
+ID Number: ${receipt.customer.studentId}
+GCash Ref: ${receipt.customer.gcashRef}
+---------------------------------
+${receipt.items.map(item => `${item.name} (${item.option}) x${item.quantity} - ₱${item.price * item.quantity}`).join('\n')}
+---------------------------------
+Total Amount: ₱${receipt.total.toFixed(2)}`;
+
+    navigator.clipboard.writeText(text);
+    window.dispatchEvent(new CustomEvent('trigger-toast', {
+      detail: { message: "Receipt copied to clipboard!" }
+    }));
+  };
+
+  const handleReset = () => {
+    setView('catalog');
+    setForm({ name: '', studentId: '', email: '', gcashRef: '' });
+    setReceipt(null);
+  };
+
+  return (
+    <div className="mockup-panel glass-panel uscce-simulator">
+      {/* Header bar */}
+      <div className="uscce-header">
+        <div className="uscce-title-row">
+          <ShoppingBag size={14} className="uscce-title-icon" style={{ color: 'var(--accent-color)', marginRight: '6px' }} />
+          <span className="uscce-title font-sans">MerchandiCE Catalogue</span>
+        </div>
+        
+        {view === 'catalog' && (
+          <button className="uscce-cart-btn" onClick={() => setView('cart')} aria-label="View Cart">
+            <ShoppingCart size={13} />
+            {cartCount > 0 && <span className="uscce-cart-badge">{cartCount}</span>}
+          </button>
+        )}
+      </div>
+
+      {/* View Router */}
+      {view === 'catalog' && (
+        <div className="uscce-catalog-view">
+          {/* Ticker marquee simulation */}
+          <div className="uscce-ticker-banner">
+            <span className="uscce-ticker-dot"></span>
+            <span className="uscce-ticker-text">🎓 Official USC CE Council Merch 2026 now accepting orders!</span>
+          </div>
+
+          {/* Tabs */}
+          <div className="uscce-tabs">
+            <button 
+              className={`uscce-tab-btn ${activeTab === 'apparel' ? 'active' : ''}`}
+              onClick={() => setActiveTab('apparel')}
+            >
+              Apparel
+            </button>
+            <button 
+              className={`uscce-tab-btn ${activeTab === 'accessories' ? 'active' : ''}`}
+              onClick={() => setActiveTab('accessories')}
+            >
+              Accessories
+            </button>
+          </div>
+
+          {/* Grid of items */}
+          <div className="uscce-items-grid">
+            {PRODUCTS.filter(p => p.category === activeTab).map(product => (
+              <div 
+                key={product.id} 
+                className={`uscce-product-card ${!product.inStock ? 'out-of-stock' : ''}`}
+                onClick={() => product.inStock && handleProductSelect(product)}
+              >
+                <div className="uscce-product-header">
+                  <span className="uscce-product-name">{product.name}</span>
+                  {!product.inStock && <span className="uscce-badge-soldout">Sold Out</span>}
+                </div>
+                <div className="uscce-product-body">
+                  <p className="uscce-product-desc">{product.description}</p>
+                  <div className="uscce-product-footer">
+                    <span className="uscce-product-price">₱{product.price.toFixed(2)}</span>
+                    {product.inStock && (
+                      <span className="uscce-action-label">Configure →</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {view === 'detail' && selectedProduct && (
+        <div className="uscce-detail-view font-sans">
+          <button className="uscce-back-link" onClick={() => setView('catalog')}>
+            <ChevronLeft size={13} /> Back to Catalog
+          </button>
+
+          <h3 className="uscce-detail-title">{selectedProduct.name}</h3>
+          <p className="uscce-detail-desc">{selectedProduct.description}</p>
+          <div className="uscce-detail-price">₱{selectedProduct.price.toFixed(2)}</div>
+
+          {/* Size/Option selection */}
+          <div className="uscce-option-group">
+            <label className="uscce-label">Select Option / Size</label>
+            <div className="uscce-option-buttons">
+              {selectedProduct.options.map(opt => (
+                <button
+                  key={opt}
+                  className={`uscce-option-btn ${selectedOption === opt ? 'active' : ''}`}
+                  onClick={() => setSelectedOption(opt)}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Quantity selector */}
+          <div className="uscce-quantity-group">
+            <label className="uscce-label">Quantity</label>
+            <div className="uscce-quantity-controls">
+              <button 
+                className="uscce-qty-btn"
+                onClick={() => setQuantity(q => Math.max(1, q - 1))}
+              >
+                <Minus size={11} />
+              </button>
+              <span className="uscce-qty-val font-mono">{quantity}</span>
+              <button 
+                className="uscce-qty-btn"
+                onClick={() => setQuantity(q => q + 1)}
+              >
+                <Plus size={11} />
+              </button>
+            </div>
+          </div>
+
+          <button className="mockup-btn-primary uscce-add-btn" onClick={handleAddToCart}>
+            Add to Order Cart (₱{(selectedProduct.price * quantity).toFixed(2)})
+          </button>
+        </div>
+      )}
+
+      {view === 'cart' && (
+        <div className="uscce-cart-view font-sans">
+          <button className="uscce-back-link" onClick={() => setView('catalog')}>
+            <ChevronLeft size={13} /> Back to Catalog
+          </button>
+
+          <h3 className="uscce-section-title">Your Order Cart</h3>
+
+          {cart.length === 0 ? (
+            <div className="uscce-empty-cart">
+              <ShoppingCart size={24} style={{ opacity: 0.3, marginBottom: 8 }} />
+              <p>Your cart is empty.</p>
+            </div>
+          ) : (
+            <>
+              <div className="uscce-cart-list">
+                {cart.map(item => (
+                  <div key={`${item.id}-${item.option}`} className="uscce-cart-item">
+                    <div className="uscce-cart-item-details">
+                      <span className="uscce-cart-item-name">{item.name}</span>
+                      <span className="uscce-cart-item-meta">Size/Option: {item.option}</span>
+                      <span className="uscce-cart-item-price">₱{item.price.toFixed(2)} each</span>
+                    </div>
+                    <div className="uscce-cart-item-actions">
+                      <div className="uscce-qty-controls-mini">
+                        <button className="uscce-qty-btn-mini" onClick={() => handleUpdateQuantity(item.id, item.option, -1)}>
+                          <Minus size={10} />
+                        </button>
+                        <span className="uscce-qty-val-mini font-mono">{item.quantity}</span>
+                        <button className="uscce-qty-btn-mini" onClick={() => handleUpdateQuantity(item.id, item.option, 1)}>
+                          <Plus size={10} />
+                        </button>
+                      </div>
+                      <span className="uscce-cart-item-total font-mono">₱{(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="uscce-cart-summary">
+                <div className="uscce-summary-row font-mono">
+                  <span>Order Total:</span>
+                  <span className="uscce-total-val">₱{cartTotal.toFixed(2)}</span>
+                </div>
+                <button className="mockup-btn-primary uscce-checkout-btn" onClick={() => setView('checkout')}>
+                  Proceed to Checkout
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {view === 'checkout' && (
+        <form className="uscce-checkout-view font-sans" onSubmit={handleCheckoutSubmit}>
+          <button type="button" className="uscce-back-link" onClick={() => setView('cart')}>
+            <ChevronLeft size={13} /> Return to Cart
+          </button>
+
+          <h3 className="uscce-section-title">CEC Checkout Verification</h3>
+
+          <div className="uscce-form-group">
+            <label className="uscce-label" htmlFor="checkout-name">Full Name</label>
+            <input 
+              id="checkout-name"
+              type="text" 
+              className="uscce-input" 
+              placeholder="e.g. Marc Andrei Regulacion"
+              value={form.name}
+              onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
+              required
+            />
+          </div>
+
+          <div className="uscce-form-row">
+            <div className="uscce-form-group">
+              <label className="uscce-label" htmlFor="checkout-studentId">Student ID Number</label>
+              <input 
+                id="checkout-studentId"
+                type="text" 
+                className="uscce-input font-mono" 
+                placeholder="e.g. 25-0984-12"
+                value={form.studentId}
+                onChange={e => setForm(prev => ({ ...prev, studentId: e.target.value }))}
+                required
+              />
+            </div>
+            <div className="uscce-form-group">
+              <label className="uscce-label" htmlFor="checkout-gcash">GCash Reference No.</label>
+              <input 
+                id="checkout-gcash"
+                type="text" 
+                className="uscce-input font-mono" 
+                placeholder="13-digit Reference Code"
+                value={form.gcashRef}
+                onChange={e => setForm(prev => ({ ...prev, gcashRef: e.target.value }))}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="uscce-form-group">
+            <label className="uscce-label" htmlFor="checkout-email">Email Address</label>
+            <input 
+              id="checkout-email"
+              type="email" 
+              className="uscce-input" 
+              placeholder="e.g. name@student.usc.edu.ph"
+              value={form.email}
+              onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))}
+              required
+            />
+          </div>
+
+          <div className="uscce-payment-notice">
+            <div className="notice-header font-sans">GCash Council Payment Destination</div>
+            <div className="notice-body font-mono">
+              <div>Treasurer: USC CE Council Treasurer</div>
+              <div>Number: 0917-123-4567</div>
+            </div>
+          </div>
+
+          <div className="uscce-cart-summary">
+            <div className="uscce-summary-row font-mono">
+              <span>Checkout Total:</span>
+              <span className="uscce-total-val">₱{cartTotal.toFixed(2)}</span>
+            </div>
+            <button type="submit" className="mockup-btn-primary uscce-checkout-btn">
+              Submit Payment & Place Order
+            </button>
+          </div>
+        </form>
+      )}
+
+      {view === 'receipt' && receipt && (
+        <div className="uscce-receipt-view font-sans">
+          <div className="uscce-ticket-wrapper">
+            <div className="uscce-ticket">
+              <div className="uscce-ticket-header">
+                <Receipt size={24} className="uscce-ticket-icon" />
+                <h4 className="uscce-ticket-school">USC Civil Engineering Council</h4>
+                <span className="uscce-ticket-title">OFFICIAL CLAIM SLIP</span>
+              </div>
+
+              <div className="uscce-ticket-body">
+                {/* Claim code row */}
+                <div className="uscce-ticket-code-card">
+                  <span className="code-label font-mono">CLAIM CODE</span>
+                  <span className="code-val font-mono">{receipt.claimCode}</span>
+                </div>
+
+                <div className="uscce-status-row">
+                  <span className="status-label">Payment Status:</span>
+                  <span className="status-badge led-waiting">Awaiting Verification</span>
+                </div>
+
+                {/* Metadata */}
+                <div className="uscce-ticket-metadata font-mono">
+                  <div className="meta-row">
+                    <span className="lbl">Claimant:</span>
+                    <span className="val">{receipt.customer.name}</span>
+                  </div>
+                  <div className="meta-row">
+                    <span className="lbl">Student ID:</span>
+                    <span className="val">{receipt.customer.studentId}</span>
+                  </div>
+                  <div className="meta-row">
+                    <span className="lbl">GCash Ref:</span>
+                    <span className="val">{receipt.customer.gcashRef}</span>
+                  </div>
+                  <div className="meta-row">
+                    <span className="lbl">Date/Time:</span>
+                    <span className="val">{receipt.date}</span>
+                  </div>
+                </div>
+
+                {/* Divider line */}
+                <div className="uscce-ticket-divider"></div>
+
+                {/* Items list */}
+                <div className="uscce-ticket-items font-sans">
+                  <span className="section-lbl font-mono">ORDER ITEMS</span>
+                  {receipt.items.map(item => (
+                    <div key={`${item.id}-${item.option}`} className="ticket-item-row font-mono">
+                      <span className="item-name-qty">{item.name} ({item.option}) x{item.quantity}</span>
+                      <span className="item-price">₱{(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Divider line */}
+                <div className="uscce-ticket-divider"></div>
+
+                {/* Total */}
+                <div className="uscce-ticket-total font-mono">
+                  <span>Grand Total:</span>
+                  <span className="total-val">₱{receipt.total.toFixed(2)}</span>
+                </div>
+              </div>
+              
+              <div className="uscce-ticket-tearoff">
+                <span className="tearoff-dot"></span>
+                <span className="tearoff-dot"></span>
+                <span className="tearoff-dot"></span>
+                <span className="tearoff-dot"></span>
+                <span className="tearoff-dot"></span>
+                <span className="tearoff-dot"></span>
+                <span className="tearoff-dot"></span>
+                <span className="tearoff-dot"></span>
+                <span className="tearoff-dot"></span>
+                <span className="tearoff-dot"></span>
+                <span className="tearoff-dot"></span>
+                <span className="tearoff-dot"></span>
+              </div>
+            </div>
+          </div>
+
+          <div className="uscce-receipt-actions">
+            <button className="uscce-receipt-action-btn font-mono" onClick={handleCopyReceipt}>
+              <Copy size={12} /> Copy Slip Details
+            </button>
+            <button className="uscce-receipt-action-btn font-mono active" onClick={handleReset}>
+              Start New Order
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1197,7 +1720,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedItem, type, on
           )}
 
           {/* Interactive Project Showcase Widget */}
-          {['Tihik', 'islaweave', 'kessh', 'PhotoboothV2', 'website-associate-bot', 'dreikesh', 'swotlib-domains-ng-edu-cit.txt'].includes(project.name) && (
+          {['Tihik', 'islaweave', 'kessh', 'PhotoboothV2', 'website-associate-bot', 'dreikesh', 'swotlib-domains-ng-edu-cit.txt', 'USCCE'].includes(project.name) && (
             <>
               <div className="detail-section-title">Interactive Showcase</div>
               {project.name === 'Tihik' && <TihikSimulator />}
@@ -1207,6 +1730,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedItem, type, on
               {project.name === 'website-associate-bot' && <BotSimulator />}
               {project.name === 'dreikesh' && <DreikeshSimulator />}
               {project.name === 'swotlib-domains-ng-edu-cit.txt' && <SwotlibSimulator />}
+              {project.name === 'USCCE' && <USCCESimulator />}
             </>
           )}
 

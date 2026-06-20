@@ -167,6 +167,19 @@ export const fallbackProfileData: ProfileData = {
       topics: ["academic", "email-validation", "kotlin", "discount-verifier"],
       updated_at: "2025-09-06T13:02:56Z",
       isFallback: true
+    },
+    {
+      id: "fb-8",
+      name: "USCCE",
+      description: "A premium merchandise catalogue and automated ordering portal for the USC Civil Engineering Council, featuring dynamic Google Sheets database syncing and PDF receipt generation.",
+      html_url: "https://github.com/Realwaan/USCCE",
+      homepage: "https://uscce.vercel.app",
+      stargazers_count: 3,
+      forks_count: 0,
+      language: "TypeScript",
+      topics: ["merchandise", "e-commerce", "react", "google-sheets-api", "tailwind-css"],
+      updated_at: "2026-06-15T23:32:00Z",
+      isFallback: true
     }
   ],
   skills: [
@@ -390,6 +403,17 @@ export const fallbackProfileData: ProfileData = {
       type: "academic",
       status: "Completed",
       iconName: "CheckSquare"
+    },
+    {
+      id: "tl-7b",
+      date: "June 2026",
+      title: "Developed USC CE Merch Site",
+      institution: "USC Civil Engineering Council",
+      description: "Designed and built 'USCCE', a premium, zero-maintenance merchandise catalogue and automated ordering portal for the University of San Carlos Civil Engineering Council, integrated with Google Sheets Apps Script API.",
+      type: "project",
+      status: "Completed",
+      iconName: "FolderCode",
+      associatedId: "repo-fb-8"
     },
     {
       id: "tl-8",

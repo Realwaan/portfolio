@@ -776,3 +776,797 @@
   font-weight: bold;
   letter-spacing: 0.5px;
 }
+
+/* ====================================================
+   8. USCCE Merchandise & Claim Slip Simulator
+   ==================================================== */
+.uscce-simulator {
+  padding: 14px;
+}
+
+.uscce-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+.uscce-title-row {
+  display: flex;
+  align-items: center;
+}
+
+.uscce-title-icon {
+  animation: pulse-active 2s infinite ease-in-out;
+}
+
+@keyframes pulse-active {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.uscce-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-main);
+  letter-spacing: 0.5px;
+}
+
+.uscce-cart-btn {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.uscce-cart-btn:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-main);
+  border-color: var(--border-focus);
+}
+
+.uscce-cart-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background-color: var(--accent-color);
+  color: #0b0b0c;
+  font-size: 8px;
+  font-weight: 800;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.5);
+  animation: bounceIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes bounceIn {
+  from {
+    transform: scale(0.3);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.uscce-ticker-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(255, 255, 255, 0.015);
+  border: 1px dashed var(--border-color);
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 9px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uscce-ticker-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #eab308;
+  box-shadow: 0 0 6px #eab308;
+  animation: ledPulse 1.5s infinite;
+  flex-shrink: 0;
+}
+
+.uscce-tabs {
+  display: flex;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 2px;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+
+.uscce-tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 10px;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 3px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.uscce-tab-btn:hover {
+  color: var(--text-main);
+}
+
+.uscce-tab-btn.active {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--accent-color);
+  font-weight: 600;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.uscce-items-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.uscce-product-card {
+  background-color: rgba(255, 255, 255, 0.01);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.uscce-product-card:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+  border-color: rgba(var(--accent-rgb), 0.25);
+}
+
+.uscce-product-card.out-of-stock {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.uscce-product-card.out-of-stock:hover {
+  border-color: var(--border-color);
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.uscce-product-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.uscce-product-name {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.uscce-badge-soldout {
+  font-size: 8px;
+  font-weight: 700;
+  color: #ff5f56;
+  background-color: rgba(255, 95, 86, 0.1);
+  border: 1px solid rgba(255, 95, 86, 0.2);
+  padding: 1px 4px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.uscce-product-desc {
+  font-size: 9px;
+  color: var(--text-muted);
+  line-height: 1.35;
+  margin: 0;
+}
+
+.uscce-product-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.uscce-product-price {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.uscce-action-label {
+  font-size: 9px;
+  color: var(--accent-color);
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.uscce-product-card:hover .uscce-action-label {
+  opacity: 1;
+}
+
+.uscce-detail-view, 
+.uscce-cart-view, 
+.uscce-checkout-view, 
+.uscce-receipt-view {
+  display: flex;
+  flex-direction: column;
+}
+
+.uscce-back-link {
+  background: transparent;
+  border: none;
+  color: var(--text-dimmed);
+  font-size: 9.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  align-self: flex-start;
+  margin-bottom: 8px;
+  transition: color 0.2s;
+}
+
+.uscce-back-link:hover {
+  color: var(--text-main);
+}
+
+.uscce-detail-title {
+  font-family: var(--font-header);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0 0 4px 0;
+}
+
+.uscce-detail-desc {
+  font-size: 9.5px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0 0 8px 0;
+}
+
+.uscce-detail-price {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-color);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.uscce-label {
+  font-size: 8.5px;
+  text-transform: uppercase;
+  color: var(--text-dimmed);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.uscce-option-group {
+  margin-bottom: 10px;
+}
+
+.uscce-option-buttons {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.uscce-option-btn {
+  background-color: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 9.5px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.uscce-option-btn:hover {
+  color: var(--text-main);
+  border-color: var(--border-focus);
+}
+
+.uscce-option-btn.active {
+  background-color: rgba(var(--accent-rgb), 0.1);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  font-weight: 600;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.uscce-quantity-group {
+  margin-bottom: 14px;
+}
+
+.uscce-quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.uscce-qty-btn {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.uscce-qty-btn:hover {
+  color: var(--text-main);
+  border-color: var(--border-focus);
+}
+
+.uscce-qty-val {
+  font-size: 11.5px;
+  color: var(--text-main);
+  font-weight: 600;
+  min-width: 16px;
+  text-align: center;
+}
+
+.uscce-add-btn {
+  width: 100%;
+  padding: 6px;
+  font-size: 10.5px;
+}
+
+.uscce-section-title {
+  font-family: var(--font-header);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-main);
+  text-transform: uppercase;
+  margin: 0 0 10px 0;
+  letter-spacing: 0.5px;
+}
+
+.uscce-empty-cart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0;
+  color: var(--text-dimmed);
+  font-size: 10px;
+}
+
+.uscce-cart-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 120px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  padding-right: 2px;
+}
+
+.uscce-cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.01);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 6px 8px;
+}
+
+.uscce-cart-item-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.uscce-cart-item-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.uscce-cart-item-meta {
+  font-size: 8px;
+  color: var(--text-dimmed);
+  margin-top: 1px;
+}
+
+.uscce-cart-item-price {
+  font-size: 8px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.uscce-cart-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.uscce-qty-controls-mini {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.uscce-qty-btn-mini {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-dimmed);
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.uscce-qty-btn-mini:hover {
+  color: var(--text-main);
+  border-color: var(--border-focus);
+}
+
+.uscce-qty-val-mini {
+  font-size: 9px;
+  color: var(--text-main);
+  min-width: 10px;
+  text-align: center;
+}
+
+.uscce-cart-item-total {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--text-main);
+  font-weight: 600;
+  min-width: 42px;
+  text-align: right;
+}
+
+.uscce-cart-summary {
+  border-top: 1px solid var(--border-color);
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.uscce-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.uscce-total-val {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+.uscce-checkout-btn {
+  width: 100%;
+  padding: 6px;
+  font-size: 10.5px;
+}
+
+.uscce-form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 8px;
+}
+
+.uscce-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.uscce-input {
+  background-color: #050506;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 10px;
+  color: var(--text-main);
+  outline: none;
+  font-family: var(--font-sans);
+  transition: border-color 0.2s;
+}
+
+.uscce-input:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.2);
+}
+
+.uscce-payment-notice {
+  background-color: rgba(16, 185, 129, 0.04);
+  border: 1px dashed rgba(16, 185, 129, 0.2);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 9px;
+  color: #10b981;
+  margin-bottom: 8px;
+}
+
+.notice-header {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.notice-body {
+  font-size: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* Receipt Ticket Styles */
+.uscce-ticket-wrapper {
+  width: 100%;
+  max-width: 220px;
+  margin: 0 auto;
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,0.5));
+}
+
+.uscce-ticket {
+  background-color: #fcfcfd;
+  color: #1e1e24;
+  border-radius: 6px 6px 0 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-bottom: none;
+}
+
+.uscce-ticket-header {
+  background-color: #0c563b;
+  color: #e5b73b;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-bottom: 2px dashed rgba(0,0,0,0.1);
+}
+
+.uscce-ticket-icon {
+  margin-bottom: 4px;
+}
+
+.uscce-ticket-school {
+  font-size: 7.5px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.uscce-ticket-title {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-top: 1px;
+}
+
+.uscce-ticket-body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.uscce-ticket-code-card {
+  background-color: #f2f5f1;
+  border: 1px solid rgba(12, 86, 59, 0.12);
+  border-radius: 4px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.code-label {
+  font-size: 7px;
+  color: #647668;
+  letter-spacing: 0.5px;
+}
+
+.code-val {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0c563b;
+  margin-top: 1px;
+}
+
+.uscce-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8.5px;
+}
+
+.status-label {
+  color: #5d5d6b;
+  font-weight: 500;
+}
+
+.status-badge {
+  font-size: 7px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.uscce-ticket-metadata {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5px;
+  font-size: 7.5px;
+  background-color: #f8faf8;
+  border: 1px solid rgba(0,0,0,0.03);
+  border-radius: 4px;
+  padding: 5px 6px;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.meta-row .lbl {
+  color: #7d7d8e;
+}
+
+.meta-row .val {
+  color: #1e1e24;
+  font-weight: 600;
+}
+
+.uscce-ticket-divider {
+  border-top: 1px dashed rgba(0,0,0,0.1);
+  margin: 3px 0;
+}
+
+.uscce-ticket-items {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.section-lbl {
+  font-size: 7px;
+  color: #7d7d8e;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.ticket-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 8px;
+}
+
+.item-name-qty {
+  color: #40404c;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-price {
+  color: #1e1e24;
+  font-weight: 600;
+}
+
+.uscce-ticket-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 9px;
+  font-weight: 700;
+  color: #0c563b;
+  margin-top: 2px;
+}
+
+.uscce-ticket-tearoff {
+  background-image: radial-gradient(circle, transparent 3px, #fcfcfd 3px);
+  background-size: 10px 10px;
+  background-position: -5px -5px;
+  height: 5px;
+  display: flex;
+  width: 100%;
+  border-top: 1px dashed rgba(0,0,0,0.08);
+  margin-top: -1px;
+}
+
+.uscce-receipt-actions {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  max-width: 220px;
+  margin: 10px auto 0 auto;
+}
+
+.uscce-receipt-action-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 4px;
+  padding: 5px;
+  font-size: 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.uscce-receipt-action-btn:hover {
+  color: var(--text-main);
+  border-color: var(--border-focus);
+}
+
+.uscce-receipt-action-btn.active {
+  background-color: var(--accent-color);
+  color: #0b0b0c;
+  border-color: var(--accent-color);
+  font-weight: 600;
+}
+

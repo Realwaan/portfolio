@@ -15,7 +15,8 @@ const PROJECT_DESCRIPTIONS: Record<string, string> = {
   'swotlib-domains-ng-edu-cit.txt': "Identify email addresses or domain names that belong to colleges or universities to help automate the process of approving or rejecting academic discounts.",
   'WebDevTOC': "A structured table of contents and curriculum reference guide for web design and platform-based development modules.",
   'Photobooth': "Legacy web-based digital camera dashboard with filters and countdown snapshot captures.",
-  'HISLab': "Hospital Information System laboratory application modeling clinical databases and patient records."
+  'HISLab': "Hospital Information System laboratory application modeling clinical databases and patient records.",
+  'USCCE': "A premium merchandise catalogue and automated ordering portal for the USC Civil Engineering Council, featuring dynamic Google Sheets database syncing and PDF receipt generation."
 };
 
 const getProjectDescription = (name: string, apiDesc: string | null) => {
