@@ -8,6 +8,7 @@ import { getCourseNotes } from '../data/courseNotesData';
 import { NotionBlockRenderer } from './NotionBlockRenderer';
 import { useNotionNotes } from '../hooks/useNotionNotes';
 import { StackVisualizer } from './StackVisualizer';
+import { InteractivePoem } from './InteractivePoem';
 import './DetailPanel.css';
 import './ShowcaseWidgets.css';
 
@@ -1609,6 +1610,21 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedItem, type, on
           </div>
           <div className="detail-body">
             <StackVisualizer />
+          </div>
+        </div>
+      );
+    }
+
+    if (selectedItem.code === 'POEM') {
+      return (
+        <div className="detail-pane stack-visualizer-detail">
+          <div className="detail-header">
+            <div className="detail-category">Unique UI Showcase</div>
+            <h2 className="detail-title">Panalangin at Tugon</h2>
+            <p className="detail-subtitle">An interactive experience blending 5 UI design systems</p>
+          </div>
+          <div className="detail-body">
+            <InteractivePoem />
           </div>
         </div>
       );

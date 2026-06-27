@@ -68,6 +68,16 @@ export function usePortfolioItems(repos: any[], sheets: any[] = [], showMap: boo
       rawItem: { code: 'VISUALIZER', name: 'Stack Visualizer', description: 'Simulate C line-by-line execution, showing Call Stack, memory addresses, and Console outputs.' }
     });
 
+    items.push({
+      id: 'interactive-poem',
+      name: 'Panalangin at Tugon',
+      subtitle: 'Original Poem & 5 UI Libraries Showcase',
+      category: 'welcome',
+      badge: 'Interactive',
+      iconName: 'Heart',
+      rawItem: { code: 'POEM', name: 'Panalangin at Tugon', description: 'Interactive representation of an original poem traversing 5 UI library styles (8bitcn, Magic UI, Kokonut UI, Aceternity UI, React Bits).' }
+    });
+
     fallbackProfileData.courses.forEach((course) => {
       items.push({
         id: `course-${course.code}`,
