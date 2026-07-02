@@ -130,9 +130,10 @@ export default async function handler(req: ExtendedRequest, res: ServerResponse)
       cover: page.cover
     }));
 
-  } catch (error: any) {
+  } catch (error) {
+    const err = error as Error;
     res.statusCode = 500;
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ error: `Internal Server Error: ${error.message || error}` }));
+    res.end(JSON.stringify({ error: `Internal Server Error: ${err.message || String(error)}` }));
   }
 }

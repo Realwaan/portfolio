@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Sparkles, Gamepad2, Heart, RefreshCw, BarChart2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Sparkles, Copy, Check, ChevronLeft, ChevronRight, BookOpen, Heart } from 'lucide-react';
 import './InteractivePoem.css';
 
 const stanzas = [
@@ -30,257 +30,136 @@ const stanzas = [
 ];
 
 export const InteractivePoem: React.FC = () => {
-  const [retroMode, setRetroMode] = useState(false);
   const [currentStanza, setCurrentStanza] = useState(0);
+  const [showFullPoem, setShowFullPoem] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [liked, setLiked] = useState(false);
 
-  // Dashboard configuration states (Kokonut UI)
-  const [tiltSensitivity, setTiltSensitivity] = useState(60);
-  const [glowIntensity, setGlowIntensity] = useState(75);
-  const [animationSpeed, setAnimationSpeed] = useState(50);
+  const fullText = stanzas.map((s) => s.join('\n')).join('\n\n');
 
-  // 3D Parallax Rotation states (React Bits)
-  const [rotateX, setRotateX] = useState(0);
-  const [rotateY, setRotateY] = useState(0);
-
-  // Pulse effect triggered by Shiny Button (Magic UI)
-  const [isPulse, setIsPulse] = useState(false);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (retroMode) return;
-    const card = e.currentTarget;
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-
-    // Convert sensitivity to maximum rotation degrees (up to 18 deg)
-    const maxRot = (tiltSensitivity / 100) * 18;
-    const rotY = ((x - centerX) / centerX) * maxRot;
-    const rotX = -((y - centerY) / centerY) * maxRot;
-
-    setRotateX(rotX);
-    setRotateY(rotY);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(`Panalangin at Tugon\n\n${fullText}`);
+    setCopied(true);
+    window.dispatchEvent(
+      new CustomEvent('trigger-toast', {
+        detail: { message: 'Poem copied to clipboard!' },
+      })
+    );
+    setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleMouseLeave = () => {
-    setRotateX(0);
-    setRotateY(0);
+  const handleLike = () => {
+    setLiked((prev) => !prev);
+    window.dispatchEvent(
+      new CustomEvent('trigger-toast', {
+        detail: { message: liked ? 'Removed from favorites' : '💖 Added poem to favorites!' },
+      })
+    );
   };
-
-  const toggleRetroMode = () => {
-    setRetroMode(prev => !prev);
-    // Custom audio indicator or toast
-    window.dispatchEvent(new CustomEvent('trigger-toast', {
-      detail: { message: `Aesthetic theme swapped to ${!retroMode ? '8-Bit Retro' : 'Modern Cinematic'}!` }
-    }));
-  };
-
-  const handleShinyClick = () => {
-    setIsPulse(true);
-    window.dispatchEvent(new CustomEvent('trigger-toast', {
-      detail: { message: "💖 Heartbeat impulse triggered across the poem's core." }
-    }));
-    setTimeout(() => setIsPulse(false), 800);
-  };
-
-  // Split text array for title letters hover effect (React Bits)
-  const splitTitle = useMemo(() => {
-    return "Panalangin at Tugon".split("");
-  }, []);
-
-  // Compute CSS styles based on interactive states
-  const cardStyle = useMemo(() => {
-    if (retroMode) return {};
-    return {
-      transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
-      boxShadow: `0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 ${glowIntensity / 2}px rgba(var(--accent-rgb), ${glowIntensity / 200})`,
-      '--beam-duration': `${25 - (animationSpeed / 100) * 20}s`
-    } as React.CSSProperties;
-  }, [retroMode, rotateX, rotateY, glowIntensity, animationSpeed]);
-
-  const spotlightStyle = useMemo(() => {
-    return {
-      opacity: glowIntensity / 100,
-    };
-  }, [glowIntensity]);
-
-  // Statistics calculation for Dashboard
-  const wordCount = useMemo(() => {
-    return stanzas.flat().join(" ").split(/\s+/).length;
-  }, []);
 
   return (
-    <div className="poem-container">
-      <div className="poem-tilt-wrapper">
-        <div 
-          className={`poem-card ${retroMode ? 'retro' : ''} ${isPulse ? 'animate-pulse' : ''}`}
-          style={cardStyle}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
+    <div className="poem-showcase-container">
+      {/* Header Info */}
+      <div className="poem-showcase-header">
+        <div className="poem-showcase-badge">
+          <Sparkles size={12} className="text-accent" />
+          <span>Poetic Expression</span>
+        </div>
+        <h2 className="poem-showcase-title">Panalangin at Tugon</h2>
+        <p className="poem-showcase-subtitle">An original Tagalog poem on destiny, devotion, and quiet quietude.</p>
+      </div>
+
+      {/* Control Actions Bar */}
+      <div className="poem-actions-bar">
+        <button
+          className={`poem-tab-btn ${!showFullPoem ? 'active' : ''}`}
+          onClick={() => setShowFullPoem(false)}
         >
-          {/* Magic UI border beam */}
-          <div className="poem-border-beam" />
+          <span>Stanza Cards</span>
+        </button>
+        <button
+          className={`poem-tab-btn ${showFullPoem ? 'active' : ''}`}
+          onClick={() => setShowFullPoem(true)}
+        >
+          <BookOpen size={13} />
+          <span>Full Poem</span>
+        </button>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
+          <button
+            className={`poem-icon-btn ${liked ? 'liked' : ''}`}
+            onClick={handleLike}
+            title="Favorite Poem"
+          >
+            <Heart size={14} fill={liked ? 'currentColor' : 'none'} />
+          </button>
+          <button className="poem-icon-btn" onClick={handleCopy} title="Copy Poem Text">
+            {copied ? <Check size={14} className="text-accent" /> : <Copy size={14} />}
+          </button>
+        </div>
+      </div>
 
-          {/* Aceternity Background Beams */}
-          <div className="poem-beams" />
-          <div className="poem-lamp-spotlight" style={spotlightStyle} />
-          
-          {/* React Bits Sparkles Layer */}
-          <div className="sparkles-matrix" />
+      {/* Main Poem Display Card */}
+      <div className="poem-main-card glass-panel">
+        <div className="poem-ambient-glow" />
 
-          {/* Retro terminal header prompt */}
-          {retroMode && (
-            <div className="poem-retro-prompt">
-              <span>[ ROM LOAD SUCCESS ]</span>
-              <span>STNZA: 0{currentStanza + 1} / 04</span>
+        {!showFullPoem ? (
+          /* Stanza Carousel View */
+          <div className="stanza-view-wrapper">
+            <div className="stanza-indicator">
+              <span>Stanza {currentStanza + 1} of {stanzas.length}</span>
             </div>
-          )}
-
-          {/* React Bits: Split-Text Title */}
-          <div className="poem-title-container">
-            {splitTitle.map((char, index) => (
-              <span 
-                key={index} 
-                className="poem-title-char"
-                style={{ transitionDelay: `${index * 20}ms` }}
-              >
-                {char === " " ? "\u00A0" : char}
-              </span>
-            ))}
-          </div>
-
-          {/* Stanza pagination display */}
-          <div className="stanzas-carousel">
-            <div className="poem-stanza">
-              {stanzas[currentStanza].map((line, index) => (
-                <p 
-                  key={index} 
-                  className="line-text"
-                  style={{ 
-                    transitionDelay: `${index * 80}ms`,
-                    transform: isPulse ? 'scale(1.05)' : undefined,
-                    color: isPulse ? 'var(--accent-color)' : undefined
-                  }}
-                >
+            <div className="stanza-content">
+              {stanzas[currentStanza].map((line, idx) => (
+                <p key={idx} className="stanza-line">
                   {line}
                 </p>
               ))}
             </div>
-          </div>
 
-          {/* Stanza Selector Dots */}
-          <div className="stanza-dots">
-            {stanzas.map((_, index) => (
-              <div 
-                key={index} 
-                className={`stanza-dot ${currentStanza === index ? 'active' : ''}`}
-                onClick={() => setCurrentStanza(index)}
-                title={`View Stanza ${index + 1}`}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Kokonut UI Bento Controls Panel (Dashboard style configuration) */}
-      <div className={`poem-bento-grid ${retroMode ? 'retro' : ''}`}>
-        
-        {/* Stat Item 1 */}
-        <div className="poem-bento-item">
-          <div className="poem-bento-header">
-            <Heart size={12} className="text-accent" />
-            <span>Structure</span>
-          </div>
-          <div className="poem-bento-value">4 Stanzas</div>
-        </div>
-
-        {/* Stat Item 2 */}
-        <div className="poem-bento-item">
-          <div className="poem-bento-header">
-            <BarChart2 size={12} />
-            <span>Words count</span>
-          </div>
-          <div className="poem-bento-value">{wordCount} Words</div>
-        </div>
-
-        {/* Stat Item 3: Shiny Impulse button */}
-        <div className="poem-bento-item" style={{ justifyContent: 'center', alignItems: 'center' }}>
-          <button className="shiny-action-btn" onClick={handleShinyClick}>
-            <Sparkles size={13} />
-            <span>Pulse Core</span>
-          </button>
-        </div>
-
-        {/* Control Box Dashboard Slider Module */}
-        <div className="poem-bento-item controls">
-          <div className="poem-bento-header" style={{ justifyContent: 'space-between', width: '100%' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Gamepad2 size={12} />
-              <span>UI Parameter Controls</span>
-            </span>
-            <button className="retro-toggle-btn" onClick={toggleRetroMode}>
-              <RefreshCw size={11} />
-              <span>Switch to {retroMode ? 'Modern UI' : 'Retro 8bit'}</span>
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
-            {/* Slider 1: Glow */}
-            {!retroMode && (
-              <div className="slider-group">
-                <div className="slider-header">
-                  <span>Aceternity Spotlight Glow</span>
-                  <span>{glowIntensity}%</span>
-                </div>
-                <input 
-                  type="range" 
-                  className="slider-input" 
-                  min="0" 
-                  max="100" 
-                  value={glowIntensity}
-                  onChange={(e) => setGlowIntensity(Number(e.target.value))}
-                />
+            {/* Navigation Controls */}
+            <div className="stanza-nav-row">
+              <button
+                className="stanza-nav-btn"
+                disabled={currentStanza === 0}
+                onClick={() => setCurrentStanza((prev) => Math.max(0, prev - 1))}
+              >
+                <ChevronLeft size={16} />
+                <span>Prev</span>
+              </button>
+              <div className="stanza-dots">
+                {stanzas.map((_, idx) => (
+                  <button
+                    key={idx}
+                    className={`stanza-dot ${currentStanza === idx ? 'active' : ''}`}
+                    onClick={() => setCurrentStanza(idx)}
+                    aria-label={`Go to stanza ${idx + 1}`}
+                  />
+                ))}
               </div>
-            )}
-
-            {/* Slider 2: Tilt */}
-            {!retroMode && (
-              <div className="slider-group">
-                <div className="slider-header">
-                  <span>React Bits 3D Mouse Tilt</span>
-                  <span>{tiltSensitivity}%</span>
-                </div>
-                <input 
-                  type="range" 
-                  className="slider-input" 
-                  min="0" 
-                  max="100" 
-                  value={tiltSensitivity}
-                  onChange={(e) => setTiltSensitivity(Number(e.target.value))}
-                />
-              </div>
-            )}
-
-            {/* Slider 3: Animation speed */}
-            <div className="slider-group">
-              <div className="slider-header">
-                <span>Magic UI Border Beam Speed</span>
-                <span>{animationSpeed}%</span>
-              </div>
-              <input 
-                type="range" 
-                className="slider-input" 
-                min="5" 
-                max="100" 
-                value={animationSpeed}
-                onChange={(e) => setAnimationSpeed(Number(e.target.value))}
-              />
+              <button
+                className="stanza-nav-btn"
+                disabled={currentStanza === stanzas.length - 1}
+                onClick={() => setCurrentStanza((prev) => Math.min(stanzas.length - 1, prev + 1))}
+              >
+                <span>Next</span>
+                <ChevronRight size={16} />
+              </button>
             </div>
           </div>
-        </div>
-
+        ) : (
+          /* Full Reader View */
+          <div className="full-poem-wrapper">
+            {stanzas.map((stanza, sIdx) => (
+              <div key={sIdx} className="full-stanza-block">
+                {stanza.map((line, lIdx) => (
+                  <p key={lIdx} className="full-line-text">
+                    {line}
+                  </p>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

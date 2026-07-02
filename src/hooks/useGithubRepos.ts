@@ -30,38 +30,64 @@ const getProjectDescription = (name: string, apiDesc: string | null) => {
 };
 
 export function useGithubRepos(username: string) {
-  const [repos, setRepos] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [repos, setRepos] = useState<Project[]>(() => {
+    if (!username) return fallbackProfileData.projects;
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { timestamp, data } = JSON.parse(cached);
+        const isExpired = Date.now() - timestamp > CACHE_DURATION;
+        if (!isExpired && data && data.length > 0) {
+          return data;
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to parse cached GitHub repositories', err);
+    }
+    return [];
+  });
+
+  const [loading, setLoading] = useState(() => {
+    if (!username) return false;
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { timestamp, data } = JSON.parse(cached);
+        const isExpired = Date.now() - timestamp > CACHE_DURATION;
+        if (!isExpired && data && data.length > 0) {
+          return false;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return true;
+  });
+
   const [error, setError] = useState<string | null>(null);
   const [isOfflineFallback, setIsOfflineFallback] = useState(false);
 
   useEffect(() => {
-    if (!username) {
-      setRepos(fallbackProfileData.projects);
-      setLoading(false);
-      setIsOfflineFallback(false);
-      return;
+    if (!username) return;
+
+    let hasValidCache = false;
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { timestamp, data } = JSON.parse(cached);
+        const isExpired = Date.now() - timestamp > CACHE_DURATION;
+        if (!isExpired && data && data.length > 0) {
+          hasValidCache = true;
+        }
+      }
+    } catch {
+      // ignore
     }
+
+    if (hasValidCache) return;
 
     const fetchRepos = async () => {
       try {
-        // Check localStorage cache first
-        try {
-          const cached = localStorage.getItem(CACHE_KEY);
-          if (cached) {
-            const { timestamp, data } = JSON.parse(cached);
-            const isExpired = Date.now() - timestamp > CACHE_DURATION;
-            if (!isExpired && data && data.length > 0) {
-              setRepos(data);
-              setLoading(false);
-              setError(null);
-              setIsOfflineFallback(false);
-              return;
-            }
-          }
-        } catch (err) {
-          console.warn('Failed to parse cached GitHub repositories', err);
-        }
 
         // Fetch from API
         const response = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=30`);

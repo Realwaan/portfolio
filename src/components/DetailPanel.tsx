@@ -9,6 +9,7 @@ import { NotionBlockRenderer } from './NotionBlockRenderer';
 import { useNotionNotes } from '../hooks/useNotionNotes';
 import { StackVisualizer } from './StackVisualizer';
 import { InteractivePoem } from './InteractivePoem';
+import { CodeSandboxWidget } from './CodeSandboxWidget';
 import './DetailPanel.css';
 import './ShowcaseWidgets.css';
 
@@ -379,6 +380,16 @@ const PhotoboothSimulator: React.FC = () => {
 // ----------------------------------------------------
 // Sub-component: website-associate-bot Automated Logs
 // ----------------------------------------------------
+const BOT_LOG_POOL = [
+  { type: "info", text: "Checking repository updates at github.com/Realwaan..." },
+  { type: "success", text: "Synced local repository caches successfully." },
+  { type: "info", text: "Checking academic schedule updates..." },
+  { type: "warning", text: "API response latent (420ms). Adjusting connection pool." },
+  { type: "info", text: "Pruning temporary cache build profiles..." },
+  { type: "success", text: "Cleaned up 42MB of system log archives." },
+  { type: "success", text: "Pushed system status heartbeat verification payload." }
+];
+
 const BotSimulator: React.FC = () => {
   const [isMonitoring, setIsMonitoring] = React.useState(true);
   const [logs, setLogs] = React.useState<Array<{ time: string; type: string; text: string }>>([
@@ -388,21 +399,11 @@ const BotSimulator: React.FC = () => {
     { time: "20:45:11", type: "success", text: "All 0 items dispatched correctly." }
   ]);
 
-  const pool = [
-    { type: "info", text: "Checking repository updates at github.com/Realwaan..." },
-    { type: "success", text: "Synced local repository caches successfully." },
-    { type: "info", text: "Checking academic schedule updates..." },
-    { type: "warning", text: "API response latent (420ms). Adjusting connection pool." },
-    { type: "info", text: "Pruning temporary cache build profiles..." },
-    { type: "success", text: "Cleaned up 42MB of system log archives." },
-    { type: "success", text: "Pushed system status heartbeat verification payload." }
-  ];
-
   React.useEffect(() => {
     if (!isMonitoring) return;
 
     const interval = setInterval(() => {
-      const randomLog = pool[Math.floor(Math.random() * pool.length)];
+      const randomLog = BOT_LOG_POOL[Math.floor(Math.random() * BOT_LOG_POOL.length)];
       const now = new Date();
       const timeStr = now.toTimeString().split(' ')[0];
       const logItem = { time: timeStr, ...randomLog };
@@ -580,6 +581,15 @@ const SwotlibSimulator: React.FC = () => {
   );
 };
 
+// Helper functions for USC CE order generation (purity safety)
+const generateUSCCEClaimCode = () => {
+  return `CEC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+};
+
+const getUSCCEFormattedDate = () => {
+  return new Date().toLocaleString();
+};
+
 // ----------------------------------------------------
 // Sub-component: USCCE Merch & Order Simulator
 // ----------------------------------------------------
@@ -707,8 +717,8 @@ const USCCESimulator: React.FC = () => {
       return;
     }
 
-    const claimCode = `CEC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-    const dateStr = new Date().toLocaleString();
+    const claimCode = generateUSCCEClaimCode();
+    const dateStr = getUSCCEFormattedDate();
     const newReceipt = {
       claimCode,
       date: dateStr,
@@ -1176,15 +1186,22 @@ const CourseNotesView: React.FC<CourseNotesViewProps> = ({ courseCode, onSelectC
     }
   });
 
-  // Sync checklist state when course changes
-  React.useEffect(() => {
+  // Sync checklist state when course changes inside render
+  const currentCourseKey = courseNode?.code || courseCode;
+  const [prevCourseKey, setPrevCourseKey] = React.useState(currentCourseKey);
+  if (currentCourseKey !== prevCourseKey) {
+    setPrevCourseKey(currentCourseKey);
+    let parsed = {};
     try {
-      const saved = localStorage.getItem(`course_notes_checklist_${courseNode?.code || courseCode}`);
-      setCheckedItems(saved ? JSON.parse(saved) : {});
+      const saved = localStorage.getItem(`course_notes_checklist_${currentCourseKey}`);
+      if (saved) {
+        parsed = JSON.parse(saved);
+      }
     } catch {
-      setCheckedItems({});
+      // ignore
     }
-  }, [courseNode?.code, courseCode]);
+    setCheckedItems(parsed);
+  }
 
   const handleToggleCheck = (index: number) => {
     const updated = { ...checkedItems, [index]: !checkedItems[index] };
@@ -1753,6 +1770,9 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedItem, type, on
           {/* clipboard copy widget */}
           <div className="detail-section-title">Developer Quick Start</div>
           <GitCloneWidget repoName={project.name} />
+
+          {/* Live Code Sandbox Widget */}
+          <CodeSandboxWidget title={`${project.name} Snippet Sandbox`} />
         </div>
       </div>
     );
@@ -1829,6 +1849,9 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedItem, type, on
               </a>
             </>
           )}
+
+          {/* Live Code Sandbox Widget */}
+          <CodeSandboxWidget title={`${skill.name} Live Practice Sandbox`} />
         </div>
       </div>
     );

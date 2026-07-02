@@ -3,9 +3,11 @@ import { Terminal, Settings } from 'lucide-react';
 import './ActionPanel.css';
 
 
+import type { AccentType } from './AccentModal';
+
 interface ActionPanelProps {
   onActionClick: () => void;
-  accent: 'raycast-red' | 'cit-gold' | 'cit-maroon';
+  accent: AccentType;
   onTerminalToggle?: () => void;
 }
 
@@ -14,6 +16,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ onActionClick, accent,
     switch (accent) {
       case 'cit-gold': return 'CIT-U Gold';
       case 'cit-maroon': return 'CIT-U Maroon';
+      case 'emerald-cyber': return 'Emerald Cyber';
       case 'raycast-red': default: return 'Raycast Red';
     }
   };

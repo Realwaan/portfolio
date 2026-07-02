@@ -8,42 +8,101 @@ export interface NotionData {
 }
 
 export function useNotionNotes(courseCode: string) {
-  const [notionData, setNotionData] = useState<NotionData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [notionData, setNotionData] = useState<NotionData | null>(() => {
+    if (!courseCode) return null;
+    try {
+      const cacheKey = `notion_course_notes_${courseCode}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const { timestamp, data } = JSON.parse(cached);
+        if (Date.now() - timestamp < 10 * 60 * 1000) {
+          return data;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return null;
+  });
+
+  const [loading, setLoading] = useState(() => {
+    if (!courseCode) return false;
+    try {
+      const cacheKey = `notion_course_notes_${courseCode}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const { timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < 10 * 60 * 1000) {
+          return false;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return true;
+  });
+
   const [error, setError] = useState<string | null>(null);
   const [isOfflineFallback, setIsOfflineFallback] = useState(false);
 
-  useEffect(() => {
+  const [prevCourseCode, setPrevCourseCode] = useState(courseCode);
+  if (courseCode !== prevCourseCode) {
+    setPrevCourseCode(courseCode);
     if (!courseCode) {
       setNotionData(null);
       setLoading(false);
       setIsOfflineFallback(false);
-      return;
+    } else {
+      let cachedData: NotionData | null = null;
+      let hasValidCache = false;
+      try {
+        const cacheKey = `notion_course_notes_${courseCode}`;
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const { timestamp, data } = JSON.parse(cached);
+          if (Date.now() - timestamp < 10 * 60 * 1000) {
+            cachedData = data;
+            hasValidCache = true;
+          }
+        }
+      } catch {
+        // ignore
+      }
+      setNotionData(cachedData);
+      setLoading(!hasValidCache);
+      setIsOfflineFallback(false);
     }
+  }
+
+  useEffect(() => {
+    if (!courseCode) return;
 
     let active = true;
     const cacheKey = `notion_course_notes_${courseCode}`;
     const cacheDuration = 10 * 60 * 1000; // 10 minutes cache
 
-    const fetchNotes = async () => {
-      // 1. Check local cache
-      try {
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-          const { timestamp, data } = JSON.parse(cached);
-          if (Date.now() - timestamp < cacheDuration) {
-            if (active) {
-              setNotionData(data);
-              setLoading(false);
-              setError(null);
-              setIsOfflineFallback(false);
-            }
-            return;
-          }
+    // Check if we already have valid cache (so we can bypass fetch if it is fully valid)
+    let hasValidCache = false;
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const { timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < cacheDuration) {
+          hasValidCache = true;
         }
-      } catch (err) {
-        console.warn('Failed to parse cached Notion notes', err);
       }
+    } catch {
+      // ignore
+    }
+    if (hasValidCache) {
+      if (active) {
+        setLoading(false);
+        setError(null);
+      }
+      return;
+    }
+
+    const fetchNotes = async () => {
 
       if (active) {
         setLoading(true);

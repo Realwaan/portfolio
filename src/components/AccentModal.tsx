@@ -2,9 +2,11 @@ import React from 'react';
 import { Check } from 'lucide-react';
 import './AccentModal.css';
 
+export type AccentType = 'raycast-red' | 'cit-gold' | 'cit-maroon' | 'emerald-cyber';
+
 interface AccentModalProps {
-  accent: 'raycast-red' | 'cit-gold' | 'cit-maroon';
-  onAccentChange: (newAccent: 'raycast-red' | 'cit-gold' | 'cit-maroon') => void;
+  accent: AccentType;
+  onAccentChange: (newAccent: AccentType) => void;
   onClose: () => void;
 }
 
@@ -75,6 +77,26 @@ export const AccentModal: React.FC<AccentModalProps> = ({
               <span>CIT-U Maroon Accent</span>
             </div>
             {accent === 'cit-maroon' && (
+              <Check size={14} style={{ color: 'var(--accent-color)' }} />
+            )}
+          </div>
+          <div
+            className={`action-modal-item ${accent === 'emerald-cyber' ? 'active' : ''}`}
+            onClick={() => onAccentChange('emerald-cyber')}
+          >
+            <div className="action-modal-item-left">
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  backgroundColor: '#10b981',
+                }}
+              ></span>
+              <span>Emerald Cyber (Neon)</span>
+            </div>
+            {accent === 'emerald-cyber' && (
               <Check size={14} style={{ color: 'var(--accent-color)' }} />
             )}
           </div>

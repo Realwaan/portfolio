@@ -61,6 +61,13 @@
   --shadow-glow: 0 0 40px rgba(255, 59, 48, 0.03);
 }
 
+[data-accent="emerald-cyber"] {
+  --accent-color: #10b981;
+  --accent-text-color: #042f2e;
+  --accent-rgb: 16, 185, 129;
+  --shadow-glow: 0 0 40px rgba(16, 185, 129, 0.06);
+}
+
 /* Global Reset */
 * {
   box-sizing: border-box;

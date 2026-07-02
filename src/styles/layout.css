@@ -289,7 +289,7 @@
   }
   
   .raycast-window {
-    height: 520px;
+    height: 540px;
     width: 100%;
   }
 
@@ -298,6 +298,10 @@
   }
 
   .pomodoro-timer-wrapper {
+    width: 100%;
+  }
+
+  .quick-focus-wrapper {
     width: 100%;
   }
 

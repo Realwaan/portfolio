@@ -2,18 +2,21 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Compass, MapPin, ExternalLink, Navigation } from 'lucide-react';
 import './PHMapPanel.css';
 
+import type { AccentType } from './AccentModal';
+
 interface PHMapPanelProps {
   sheets: any[];
   selectedItem: any;
   searchQuery: string;
   onSelectSheet: (sheetNo: string) => void;
-  accent: 'raycast-red' | 'cit-gold' | 'cit-maroon';
+  accent: AccentType;
 }
 
 const ACCENT_COLORS = {
   'raycast-red': '#ff3b30',
   'cit-gold': '#ffc72c',
   'cit-maroon': '#b31010',
+  'emerald-cyber': '#10b981',
 };
 
 const BASE_LAYERS = {
@@ -50,6 +53,17 @@ export const PHMapPanel: React.FC<PHMapPanelProps> = ({
   const [selectedSheetData, setSelectedSheetData] = useState<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
 
+  // Sync selectedSheetData inside render when selectedItem changes
+  const [prevSelectedItem, setPrevSelectedItem] = useState<any>(null);
+  if (selectedItem !== prevSelectedItem) {
+    setPrevSelectedItem(selectedItem);
+    if (!selectedItem || selectedItem.category !== 'map') {
+      setSelectedSheetData(null);
+    } else {
+      setSelectedSheetData(selectedItem.rawItem || selectedItem);
+    }
+  }
+
   // New HUD states
   const [statusFilter, setStatusFilter] = useState<'all' | 'owned' | 'scan'>('all');
   const [baseLayer, setBaseLayer] = useState<'dark' | 'satellite' | 'topo'>('dark');
@@ -59,7 +73,7 @@ export const PHMapPanel: React.FC<PHMapPanelProps> = ({
   const activeColor = ACCENT_COLORS[accent] || '#ff3b30';
 
   // Dynamic fitBounds padding options based on window width to keep selected sheets in the right clear zone
-  const getFitBoundsOptions = () => {
+  const getFitBoundsOptions = React.useCallback(() => {
     const isDesktop = window.innerWidth > 1100;
     if (isDesktop) {
       const leftPadding = Math.round(window.innerWidth * 0.52);
@@ -77,7 +91,61 @@ export const PHMapPanel: React.FC<PHMapPanelProps> = ({
       animate: true,
       duration: 0.8,
     };
-  };
+  }, []);
+
+  // Helper to re-apply the filter-based style to a single sheet layer
+  const applyLayerFilterStyle = React.useCallback((sheet: any, rectLayer: any) => {
+    const query = searchQuery.trim().toLowerCase();
+    const isSelected = selectedItem && selectedItem.sheet_no === sheet.sheet_no;
+
+    if (isSelected) {
+      rectLayer.setStyle({
+        color: activeColor,
+        weight: 2.5,
+        fillColor: activeColor,
+        fillOpacity: 0.35,
+      });
+      rectLayer.bringToFront();
+      return;
+    }
+
+    const matchesSearch = !query || 
+      sheet.sheet_name.toLowerCase().includes(query) ||
+      sheet.sheet_no.toLowerCase().includes(query);
+
+    const matchesStatus = 
+      statusFilter === 'all' ||
+      (statusFilter === 'owned' && sheet.library_owns === 'Yes') ||
+      (statusFilter === 'scan' && sheet.scan && sheet.scan !== 'NONE');
+
+    if (matchesSearch && matchesStatus) {
+      rectLayer.setStyle({
+        color: activeColor,
+        weight: 1.2,
+        fillColor: activeColor,
+        fillOpacity: 0.15,
+      });
+    } else {
+      rectLayer.setStyle({
+        color: '#2a2a2e',
+        weight: 0.4,
+        fillColor: '#000000',
+        fillOpacity: 0.01,
+      });
+    }
+  }, [searchQuery, selectedItem, activeColor, statusFilter]);
+
+  // 3. Update styles when searchQuery, filter, or accent theme changes
+  const updateStyles = React.useCallback(() => {
+    if (layersMapRef.current.size === 0) return;
+    
+    sheets.forEach((sheet) => {
+      const rectLayer = layersMapRef.current.get(sheet.sheet_no);
+      if (rectLayer) {
+        applyLayerFilterStyle(sheet, rectLayer);
+      }
+    });
+  }, [sheets, applyLayerFilterStyle]);
 
   // Memoize map sheet statistics
   const stats = useMemo(() => {
@@ -170,7 +238,7 @@ export const PHMapPanel: React.FC<PHMapPanelProps> = ({
         gpsMarkerRef.current = null;
       }
     };
-  }, []);
+  }, [baseLayer, mapLoaded]);
 
   // Handle base layer changes
   useEffect(() => {
@@ -274,77 +342,20 @@ export const PHMapPanel: React.FC<PHMapPanelProps> = ({
     });
 
     updateStyles();
-  }, [mapLoaded, sheets]);
-
-  // Helper to re-apply the filter-based style to a single sheet layer
-  const applyLayerFilterStyle = (sheet: any, rectLayer: any) => {
-    const query = searchQuery.trim().toLowerCase();
-    const isSelected = selectedItem && selectedItem.sheet_no === sheet.sheet_no;
-
-    if (isSelected) {
-      rectLayer.setStyle({
-        color: activeColor,
-        weight: 2.5,
-        fillColor: activeColor,
-        fillOpacity: 0.35,
-      });
-      rectLayer.bringToFront();
-      return;
-    }
-
-    const matchesSearch = !query || 
-      sheet.sheet_name.toLowerCase().includes(query) ||
-      sheet.sheet_no.toLowerCase().includes(query);
-
-    const matchesStatus = 
-      statusFilter === 'all' ||
-      (statusFilter === 'owned' && sheet.library_owns === 'Yes') ||
-      (statusFilter === 'scan' && sheet.scan && sheet.scan !== 'NONE');
-
-    if (matchesSearch && matchesStatus) {
-      rectLayer.setStyle({
-        color: activeColor,
-        weight: 1.2,
-        fillColor: activeColor,
-        fillOpacity: 0.15,
-      });
-    } else {
-      rectLayer.setStyle({
-        color: '#2a2a2e',
-        weight: 0.4,
-        fillColor: '#000000',
-        fillOpacity: 0.01,
-      });
-    }
-  };
-
-  // 3. Update styles when searchQuery, filter, or accent theme changes
-  const updateStyles = () => {
-    if (layersMapRef.current.size === 0) return;
-    
-    sheets.forEach((sheet) => {
-      const rectLayer = layersMapRef.current.get(sheet.sheet_no);
-      if (rectLayer) {
-        applyLayerFilterStyle(sheet, rectLayer);
-      }
-    });
-  };
+  }, [mapLoaded, sheets, activeColor, getFitBoundsOptions, applyLayerFilterStyle, updateStyles, onSelectSheet]);
 
   useEffect(() => {
     updateStyles();
-  }, [searchQuery, statusFilter, accent, selectedItem, sheets]);
+  }, [updateStyles]);
 
   // 4. Center map when selectedItem changes
   useEffect(() => {
     if (!mapRef.current || !selectedItem || selectedItem.category !== 'map') {
-      setSelectedSheetData(null);
       return;
     }
 
     const sheet = selectedItem.rawItem || selectedItem;
     if (sheet && sheet.bounds) {
-      setSelectedSheetData(sheet);
-      
       const rectBounds = [
         [sheet.bounds.min_lat, sheet.bounds.min_lon],
         [sheet.bounds.max_lat, sheet.bounds.max_lon]
@@ -352,7 +363,7 @@ export const PHMapPanel: React.FC<PHMapPanelProps> = ({
       
       mapRef.current.fitBounds(rectBounds, getFitBoundsOptions());
     }
-  }, [selectedItem]);
+  }, [selectedItem, getFitBoundsOptions]);
 
   // Reset View shortcut
   const handleResetView = () => {

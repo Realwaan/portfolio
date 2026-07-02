@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './TerminalConsole.css';
 
+import type { AccentType } from './AccentModal';
+
 interface TerminalConsoleProps {
   onClose: () => void;
-  accent: 'raycast-red' | 'cit-gold' | 'cit-maroon';
-  onThemeChange: (theme: 'raycast-red' | 'cit-gold' | 'cit-maroon') => void;
+  accent: AccentType;
+  onThemeChange: (theme: AccentType) => void;
   projects: any[];
 }
 
@@ -22,11 +24,12 @@ export const TerminalConsole: React.FC<TerminalConsoleProps> = ({
   const [inputValue, setInputValue] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const startupTime = useRef(Date.now());
+  const startupTime = useRef<number>(0);
 
   // Focus input automatically
   useEffect(() => {
     inputRef.current?.focus();
+    startupTime.current = Date.now();
   }, []);
 
   // Scroll to bottom on history change
@@ -62,7 +65,7 @@ export const TerminalConsole: React.FC<TerminalConsoleProps> = ({
           '  exit      - Close terminal mode'
         );
         break;
-      case 'neofetch':
+      case 'neofetch': {
         const uptimeSec = Math.floor((Date.now() - startupTime.current) / 1000);
         const uptimeMin = Math.floor(uptimeSec / 60);
         const uptimeStr = uptimeMin > 0 ? `${uptimeMin}m ${uptimeSec % 60}s` : `${uptimeSec}s`;
@@ -88,6 +91,7 @@ export const TerminalConsole: React.FC<TerminalConsoleProps> = ({
           'motto: Virtus in Scientia (Virtue in Science)'
         );
         break;
+      }
       case 'projects':
         newHistory.push('Fetching Git repositories table...');
         if (projects.length === 0) {

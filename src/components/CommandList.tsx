@@ -44,6 +44,16 @@ export const CommandList: React.FC<CommandListProps> = ({
   sectionCounts,
   isSearching
 }) => {
+  const selectedItemRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    if (selectedItemRef.current) {
+      selectedItemRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }, [selectedIndex]);
   // Group items by category to display them in sections
   const categories: { [key: string]: ListItem[] } = {
     'Welcome Profile': [],
@@ -116,6 +126,7 @@ export const CommandList: React.FC<CommandListProps> = ({
                 <div
                   id={item.id}
                   key={item.id}
+                  ref={isSelected ? selectedItemRef : null}
                   className={`list-item ${isSelected ? 'selected' : ''}`}
                   onClick={() => onItemClick(item)}
                   onMouseEnter={() => onHoverItem(itemIdx)}

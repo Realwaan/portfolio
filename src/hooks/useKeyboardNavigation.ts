@@ -30,6 +30,22 @@ export function useKeyboardNavigation({
 }: KeyboardNavigationProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Quick search focus with Ctrl+K or /
+      const activeTag = document.activeElement?.tagName;
+      const isTyping = activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT';
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        return;
+      }
+
+      if (!isTyping && e.key === '/') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        return;
+      }
+
       // Toggle Action menu on Tab
       if (e.key === 'Tab') {
         e.preventDefault();
@@ -37,7 +53,7 @@ export function useKeyboardNavigation({
         return;
       }
 
-      // Close open drawers/menus on Escape
+      // Hierarchical Close on Escape
       if (e.key === 'Escape') {
         if (showActionModal) {
           setShowActionModal(false);
@@ -45,13 +61,13 @@ export function useKeyboardNavigation({
           setShowMobileDrawer(false);
         } else if (search) {
           setSearch('');
+        } else {
+          searchInputRef.current?.blur();
         }
         return;
       }
 
-      // Focus input if any other key is pressed and user is not already typing in another input/textarea
-      const activeTag = document.activeElement?.tagName;
-      const isTyping = activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT';
+      // Auto focus search input when typing printable character
       if (
         !isTyping &&
         document.activeElement !== searchInputRef.current &&

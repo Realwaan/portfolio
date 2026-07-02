@@ -74,8 +74,9 @@ export const Toast: React.FC<ToastProps> = ({ toasts, setToasts }) => {
 
   // Cleanup all timers on unmount
   useEffect(() => {
+    const timeouts = timeoutsRef.current;
     return () => {
-      Object.values(timeoutsRef.current).forEach((t) => clearTimeout(t));
+      Object.values(timeouts).forEach((t) => clearTimeout(t));
     };
   }, []);
 

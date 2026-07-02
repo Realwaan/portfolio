@@ -99,6 +99,16 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
   const dragStart = React.useRef({ x: 0, y: 0 });
   const svgRef = React.useRef<SVGSVGElement | null>(null);
 
+  // Reset zoom & pan on course selection change inside render
+  const [prevCourseCode, setPrevCourseCode] = useState(selectedCourseCode);
+  if (selectedCourseCode !== prevCourseCode) {
+    setPrevCourseCode(selectedCourseCode);
+    const isOverview = !selectedCourseCode || selectedCourseCode.toUpperCase() === 'OVERVIEW';
+    setZoom(isOverview ? 1.65 : 1.45);
+    setPanOffset({ x: 0, y: 0 });
+    setIsDragging(false);
+  }
+
   // Mouse drag handlers for canvas panning
   const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
     if (e.button !== 0) return; // Only pan on left click
@@ -118,13 +128,7 @@ export const CurriculumRoadmap: React.FC<CurriculumRoadmapProps> = ({
     setIsDragging(false);
   };
 
-  // Reset zoom & pan on course selection change
-  React.useEffect(() => {
-    const isOverview = !selectedCourseCode || selectedCourseCode.toUpperCase() === 'OVERVIEW';
-    setZoom(isOverview ? 1.65 : 1.45);
-    setPanOffset({ x: 0, y: 0 });
-    setIsDragging(false);
-  }, [selectedCourseCode]);
+
 
   // Native wheel listener for smooth wheel zooming without passive scroll warnings
   React.useEffect(() => {

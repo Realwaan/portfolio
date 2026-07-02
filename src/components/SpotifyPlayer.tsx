@@ -3,7 +3,6 @@ import { Disc3, ChevronLeft, ChevronRight, Music, Play, Pause, RotateCcw, SkipFo
 import { LYRICS_DATABASE } from '../data/lyricsData';
 import './SpotifyPlayer.css';
 
-
 interface Track {
   id: string;
   title: string;
@@ -74,7 +73,7 @@ export const SpotifyPlayer: React.FC = () => {
 
   const songLyrics = LYRICS_DATABASE[track.id] || [];
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // Refs for tracking manual scrolling
   const isUserScrollingRef = useRef(false);
   const userScrollTimeoutRef = useRef<any>(null);
@@ -88,7 +87,6 @@ export const SpotifyPlayer: React.FC = () => {
     const IFrameAPI = (window as any).SpotifyIframeApi;
     if (!IFrameAPI || embedControllerRef.current) return;
 
-    // Use a sentinel value in ref to prevent multiple controllers being created in React strict mode
     embedControllerRef.current = true;
 
     const options = {
@@ -98,13 +96,10 @@ export const SpotifyPlayer: React.FC = () => {
       theme: '0'
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     IFrameAPI.createController(element, options, (EmbedController: any) => {
       embedControllerRef.current = EmbedController;
       setController(EmbedController);
 
-      // Synchronize with Spotify embed updates
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       EmbedController.addListener('playback_update', (e: any) => {
         const { position, isPaused } = e.data;
         setCurrentTime(position / 1000);
@@ -113,7 +108,7 @@ export const SpotifyPlayer: React.FC = () => {
     });
   };
 
-  // Listen for the Spotify IFrame API ready event from index.html
+  // Listen for the Spotify IFrame API ready event
   useEffect(() => {
     const handleApiReady = () => {
       if (placeholderRef.current) {
@@ -121,7 +116,6 @@ export const SpotifyPlayer: React.FC = () => {
       }
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((window as any).SpotifyIframeApi) {
       handleApiReady();
     } else {
@@ -131,7 +125,6 @@ export const SpotifyPlayer: React.FC = () => {
     return () => {
       window.removeEventListener('spotify-api-ready', handleApiReady);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update track URI when track changes
@@ -139,11 +132,9 @@ export const SpotifyPlayer: React.FC = () => {
     if (controller) {
       const trackUri = `spotify:${track.type || 'track'}:${track.id}`;
       controller.loadUri(trackUri);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentTime(0);
       setIsPlaying(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTrack, controller]);
 
   // Close track dropdown when clicking outside
@@ -162,7 +153,7 @@ export const SpotifyPlayer: React.FC = () => {
     let interval: ReturnType<typeof setInterval> | null = null;
     if (isPlaying) {
       interval = setInterval(() => {
-        setCurrentTime((prev) => prev + 0.1); // Increment by 0.1s every 100ms
+        setCurrentTime((prev) => prev + 0.1);
       }, 100);
     }
     return () => {
@@ -198,10 +189,9 @@ export const SpotifyPlayer: React.FC = () => {
     }
     userScrollTimeoutRef.current = setTimeout(() => {
       isUserScrollingRef.current = false;
-    }, 3000); // Resume auto-scrolling after 3 seconds of inactivity
+    }, 3000);
   };
 
-  // Cleanup scroll timeout on unmount
   useEffect(() => {
     return () => {
       if (userScrollTimeoutRef.current) clearTimeout(userScrollTimeoutRef.current);
@@ -216,7 +206,6 @@ export const SpotifyPlayer: React.FC = () => {
     setActiveTrack((prev) => (prev + 1) % NIKI_TRACKS.length);
   };
 
-  // Bridge custom play buttons to Spotify iframe controller
   const handlePlayPause = () => {
     if (controller) {
       controller.togglePlay();
@@ -246,98 +235,90 @@ export const SpotifyPlayer: React.FC = () => {
 
   return (
     <div className="spotify-player-inline" onClick={(e) => e.stopPropagation()}>
-      {/* Main Player Row */}
-      <div className="spotify-player-main-row">
-        {/* Controls Strip */}
-        <div className="spotify-controls-strip">
-          <div className="spotify-disc-icon-container">
-            <Disc3 size={18} className="spotify-fab-icon" style={{ color: track.color }} />
-          </div>
-          
-          <div className="spotify-meta-column">
-            <span className="spotify-playlist-title">NIKI Favorites</span>
-            <div className="spotify-selector-row">
-              <button 
-                className="spotify-nav-btn" 
-                onClick={handlePrev}
-                aria-label="Previous track"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              
-              <div className="spotify-select-custom-wrapper" ref={dropdownRef}>
-                <button 
-                  className="spotify-track-select-trigger"
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  style={{ color: track.color }}
-                  aria-haspopup="listbox"
-                  aria-expanded={isDropdownOpen}
-                >
-                  <span className="spotify-select-trigger-text">{track.title}</span>
-                  <span className="spotify-select-trigger-arrow">▼</span>
-                </button>
+      {/* Header Bar: Track Selector & Controls */}
+      <div className="spotify-player-header-bar">
+        <div className="spotify-disc-icon-container">
+          <Disc3 size={18} className="spotify-fab-icon" style={{ color: track.color }} />
+        </div>
 
-                {isDropdownOpen && (
-                  <div className="spotify-select-dropdown-list" role="listbox">
-                    {NIKI_TRACKS.map((t, idx) => {
-                      const isActive = idx === activeTrack;
-                      return (
-                        <div
-                          key={t.id}
-                          role="option"
-                          aria-selected={isActive}
-                          className={`spotify-select-dropdown-item ${isActive ? 'active' : ''}`}
-                          onClick={() => {
-                            setActiveTrack(idx);
-                            setIsDropdownOpen(false);
-                          }}
-                          style={isActive ? { color: t.color, backgroundColor: 'rgba(255, 255, 255, 0.08)' } : {}}
-                        >
-                          <span className="spotify-dropdown-item-title">{t.title}</span>
-                          <span className="spotify-dropdown-item-artist">{t.artist}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+        <div className="spotify-meta-column">
+          <span className="spotify-playlist-title">{track.artist} Favorites</span>
+          <div className="spotify-selector-row">
+            <button 
+              className="spotify-nav-btn" 
+              onClick={handlePrev}
+              aria-label="Previous track"
+            >
+              <ChevronLeft size={16} />
+            </button>
 
+            <div className="spotify-select-custom-wrapper" ref={dropdownRef}>
               <button 
-                className="spotify-nav-btn" 
-                onClick={handleNext}
-                aria-label="Next track"
+                className="spotify-track-select-trigger"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                style={{ color: track.color }}
+                aria-haspopup="listbox"
+                aria-expanded={isDropdownOpen}
               >
-                <ChevronRight size={16} />
+                <span className="spotify-select-trigger-text">{track.title}</span>
+                <span className="spotify-select-trigger-arrow">▼</span>
               </button>
 
-              {SHOW_LYRICS_FEATURE && (
-                <button
-                  className={`spotify-lyrics-toggle-btn ${showLyrics ? 'active' : ''}`}
-                  onClick={() => setShowLyrics(!showLyrics)}
-                  aria-label="Toggle lyrics"
-                  style={showLyrics ? { color: track.color, borderColor: track.color, backgroundColor: 'rgba(255, 255, 255, 0.05)' } : {}}
-                >
-                  <Music size={12} />
-                  <span className="lyrics-toggle-label">Lyrics</span>
-                </button>
+              {isDropdownOpen && (
+                <div className="spotify-select-dropdown-list" role="listbox">
+                  {NIKI_TRACKS.map((t, idx) => {
+                    const isActive = idx === activeTrack;
+                    return (
+                      <div
+                        key={t.id}
+                        role="option"
+                        aria-selected={isActive}
+                        className={`spotify-select-dropdown-item ${isActive ? 'active' : ''}`}
+                        onClick={() => {
+                          setActiveTrack(idx);
+                          setIsDropdownOpen(false);
+                        }}
+                        style={isActive ? { color: t.color, backgroundColor: 'rgba(255, 255, 255, 0.08)' } : {}}
+                      >
+                        <span className="spotify-dropdown-item-title">{t.title}</span>
+                        <span className="spotify-dropdown-item-artist">{t.artist}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
+
+            <button 
+              className="spotify-nav-btn" 
+              onClick={handleNext}
+              aria-label="Next track"
+            >
+              <ChevronRight size={16} />
+            </button>
+
+            {SHOW_LYRICS_FEATURE && (
+              <button
+                className={`spotify-lyrics-toggle-btn ${showLyrics ? 'active' : ''}`}
+                onClick={() => setShowLyrics(!showLyrics)}
+                aria-label="Toggle lyrics"
+                style={showLyrics ? { color: track.color, borderColor: track.color, backgroundColor: 'rgba(255, 255, 255, 0.05)' } : {}}
+              >
+                <Music size={12} />
+                <span className="lyrics-toggle-label">Lyrics</span>
+              </button>
+            )}
           </div>
         </div>
+      </div>
 
-        {/* Spotify Embed Iframe Placeholder (API replaces this target) */}
-        <div className="spotify-embed-wrapper-inline">
-          <div 
-            id="spotify-iframe-placeholder" 
-            ref={(el) => {
-              placeholderRef.current = el;
-              if (el && (window as any).SpotifyIframeApi) {
-                setupSpotifyPlayer(el);
-              }
-            }} 
-            style={{ minHeight: '80px', width: '100%' }}
-          ></div>
-        </div>
+      {/* Embedded Spotify Official Player Box */}
+      <div className="spotify-embed-container">
+        <div 
+          id="spotify-iframe-placeholder" 
+          ref={placeholderRef} 
+          style={{ minHeight: '80px', width: '100%' }}
+        ></div>
       </div>
 
       {/* Synced Lyrics Panel */}

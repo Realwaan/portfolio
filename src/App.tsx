@@ -16,11 +16,16 @@ import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
 import { PHMapPanel } from './components/PHMapPanel';
 import { TerminalConsole } from './components/TerminalConsole';
 import { PomodoroTimer } from './components/PomodoroTimer';
+import { QuickFocusWidget } from './components/QuickFocusWidget';
 
 export default function App() {
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [accent, setAccent] = useState<'raycast-red' | 'cit-gold' | 'cit-maroon'>('raycast-red');
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState<'all' | 'project' | 'course' | 'skill' | 'map' | 'navigation'>('all');
+  const [accent, setAccent] = useState<'raycast-red' | 'cit-gold' | 'cit-maroon' | 'emerald-cyber'>(() => {
+    const saved = localStorage.getItem('raycast_accent');
+    return (saved as any) || 'raycast-red';
+  });
   const [showWelcome, setShowWelcome] = useState(true);
   const [showActionModal, setShowActionModal] = useState(false);
   const [showMobileDrawer, setShowMobileDrawer] = useState(false);
@@ -59,10 +64,6 @@ export default function App() {
   // Focus input automatically on load and when clicking empty space
   useEffect(() => {
     searchInputRef.current?.focus();
-    const savedAccent = localStorage.getItem('raycast_accent');
-    if (savedAccent) {
-      setAccent(savedAccent as any);
-    }
 
     const handleCustomToast = (e: Event) => {
       const customEvent = e as CustomEvent;
@@ -106,7 +107,7 @@ export default function App() {
   }
 
   // Switch accent theme
-  const handleAccentChange = (newAccent: 'raycast-red' | 'cit-gold' | 'cit-maroon') => {
+  const handleAccentChange = (newAccent: 'raycast-red' | 'cit-gold' | 'cit-maroon' | 'emerald-cyber') => {
     setAccent(newAccent);
     localStorage.setItem('raycast_accent', newAccent);
     triggerToast(
@@ -115,21 +116,30 @@ export default function App() {
           ? 'CIT Gold'
           : newAccent === 'cit-maroon'
           ? 'CIT Maroon'
+          : newAccent === 'emerald-cyber'
+          ? 'Emerald Cyber'
           : 'Raycast Red'
       }`
     );
     setShowActionModal(false);
   };
 
-  // Filter items matching search
+  // Filter items matching search & active category filter
   const filteredItems = useMemo(() => {
+    let list = flatItemsList;
+
+    if (activeCategoryFilter !== 'all') {
+      list = list.filter((item) => item.category === activeCategoryFilter);
+    }
+
     if (!search.trim()) {
-      return flatItemsList.filter((item) => {
-        return expandedSections[item.category];
+      return list.filter((item) => {
+        return activeCategoryFilter !== 'all' ? true : expandedSections[item.category];
       });
     }
+
     const query = search.toLowerCase();
-    return flatItemsList.filter((item) => {
+    return list.filter((item) => {
       const nameMatch = item.name.toLowerCase().includes(query);
       const subtitleMatch = item.subtitle.toLowerCase().includes(query);
       const badgeMatch = item.badge.toLowerCase().includes(query);
@@ -147,7 +157,7 @@ export default function App() {
 
       return nameMatch || subtitleMatch || badgeMatch || rawDescriptionMatch;
     });
-  }, [search, flatItemsList, expandedSections]);
+  }, [search, flatItemsList, expandedSections, activeCategoryFilter]);
 
   // Keep selected index in bounds when items change
   useEffect(() => {
@@ -338,23 +348,60 @@ export default function App() {
                 <>
                   {/* Search header bar */}
                   <div className="search-bar-container">
-                    <Search size={18} className="search-icon" />
-                    <input
-                      ref={searchInputRef}
-                      type="text"
-                      className="search-input"
-                      placeholder="Search projects, academics, skills, or contact info..."
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      aria-label="Command search"
-                    />
-                    {error && (
-                      <div className="active-accent-indicator" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.25)', color: '#ef4444' }}>
-                        <ShieldAlert size={11} style={{ marginRight: 2 }} /> Fallback Mode
+                    <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '8px' }}>
+                      <Search size={18} className="search-icon" />
+                      <input
+                        ref={searchInputRef}
+                        type="text"
+                        className="search-input"
+                        placeholder="Search projects, academics, skills, or contact info..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        aria-label="Command search"
+                      />
+                      {error && (
+                        <div className="active-accent-indicator" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.25)', color: '#ef4444' }}>
+                          <ShieldAlert size={11} style={{ marginRight: 2 }} /> Fallback Mode
+                        </div>
+                      )}
+                      <div className="active-accent-indicator">
+                        {accent === 'cit-gold' ? 'Wildcats' : accent === 'emerald-cyber' ? 'Emerald' : 'Classic'}
                       </div>
-                    )}
-                    <div className="active-accent-indicator">
-                      {accent === 'cit-gold' ? 'Wildcats' : 'Classic'}
+                    </div>
+
+                    {/* Quick Category Filter Pills */}
+                    <div className="category-filter-pills font-mono" style={{ display: 'flex', gap: '6px', marginTop: '8px', overflowX: 'auto', paddingBottom: '2px' }}>
+                      {[
+                        { id: 'all', label: 'All' },
+                        { id: 'project', label: 'Projects' },
+                        { id: 'course', label: 'Academics' },
+                        { id: 'skill', label: 'Skills' },
+                        { id: 'map', label: 'Map' },
+                        { id: 'navigation', label: 'Actions' },
+                      ].map((filter) => (
+                        <button
+                          key={filter.id}
+                          className={`filter-pill ${activeCategoryFilter === filter.id ? 'active' : ''}`}
+                          onClick={() => {
+                            setActiveCategoryFilter(filter.id as any);
+                            setSelectedIndex(0);
+                          }}
+                          style={{
+                            height: '22px',
+                            padding: '0 8px',
+                            fontSize: '11px',
+                            borderRadius: '4px',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            background: activeCategoryFilter === filter.id ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.04)',
+                            color: activeCategoryFilter === filter.id ? 'var(--accent-text-color)' : 'var(--text-muted)',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {filter.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
@@ -409,17 +456,22 @@ export default function App() {
                 />
               )}
           </div>
-
-          {/* Spotify Player underneath the search panel */}
-          <div className="spotify-player-wrapper">
-            <SpotifyPlayer />
-          </div>
         </div>
 
         <div className="portfolio-column right-column">
           {/* Pomodoro Timer widget */}
           <div className="pomodoro-timer-wrapper">
             <PomodoroTimer />
+          </div>
+
+          {/* Spotify Player widget */}
+          <div className="spotify-player-wrapper">
+            <SpotifyPlayer />
+          </div>
+
+          {/* Quick Focus & Shortcuts Widget */}
+          <div className="quick-focus-wrapper">
+            <QuickFocusWidget accent={accent} />
           </div>
         </div>
       </div>
